@@ -1,0 +1,57 @@
+---
+interface NavItem {
+  url: string
+  title: string
+}
+interface NavGroup {
+  label: string
+  items: NavItem[]
+  dir: string
+}
+
+const { path, nav } = Astro.props as { path: string; nav: NavGroup[] }
+
+const segments = path.split('/').filter(Boolean)
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+
+// Build breadcrumb labels with links to intermediate segments; last segment is plain text
+const crumbs = segments.map((segment, index) => {
+  const currentPath = '/' + segments.slice(0, index + 1).join('/')
+
+  const section = nav.find((n) => n.dir === segment)
+  if (section) {
+    return {
+      label: section.label,
+      href: index < segments.length - 1 ? currentPath : undefined,
+    }
+  }
+
+  for (const group of nav) {
+    const item = group.items.find((i) => i.url === currentPath)
+    if (item) {
+      return {
+        label: item.title,
+        href: index < segments.length - 1 ? currentPath : undefined,
+      }
+    }
+  }
+
+  return {
+    label: capitalize(segment),
+    href: index < segments.length - 1 ? currentPath : undefined,
+  }
+})
+---
+
+<nav aria-label="Breadcrumb">
+  <ol class="flex gap-2 text-xs text-sd-muted">
+    {
+      crumbs.map((c, i) => (
+        <li class="flex items-center gap-2">
+          {i > 0 && <span>/</span>}
+          {c.href ? <a href={c.href}>{c.label}</a> : <span>{c.label}</span>}
+        </li>
+      ))
+    }
+  </ol>
+</nav>

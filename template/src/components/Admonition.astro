@@ -1,0 +1,106 @@
+---
+import { cva } from 'class-variance-authority'
+import { Icon } from 'astro-icon/components'
+
+const props = Astro.props as {
+  variant?: 'note' | 'tip' | 'warning' | 'error'
+  type?: 'note' | 'tip' | 'warning' | 'error' | 'info' | 'important'
+  title?: string
+  icon?: string
+  name?: string
+  showIcon?: boolean
+  class?: string
+}
+
+const typeToVariant: Record<string, 'note' | 'tip' | 'warning' | 'error'> = {
+  note: 'note',
+  tip: 'tip',
+  warning: 'warning',
+  error: 'error',
+  info: 'note',
+  important: 'warning',
+}
+
+const variant =
+  props.variant ?? (props.type ? (typeToVariant[props.type] ?? 'note') : 'note')
+const showIcon = props.showIcon ?? true
+
+const wrapper = cva('my-4 rounded-md border p-4 text-sm', {
+  variants: {
+    variant: {
+      note: 'border-[oklch(from_var(--color-admonition-note)_l_c_h_/_0.55)] bg-[oklch(from_var(--color-admonition-note)_l_c_h_/_0.12)]',
+      tip: 'border-[oklch(from_var(--color-admonition-tip)_l_c_h_/_0.55)] bg-[oklch(from_var(--color-admonition-tip)_l_c_h_/_0.12)]',
+      warning:
+        'border-[oklch(from_var(--color-admonition-warning)_l_c_h_/_0.55)] bg-[oklch(from_var(--color-admonition-warning)_l_c_h_/_0.12)]',
+      error:
+        'border-[oklch(from_var(--color-admonition-error)_l_c_h_/_0.55)] bg-[oklch(from_var(--color-admonition-error)_l_c_h_/_0.12)]',
+    },
+  },
+  defaultVariants: { variant: 'note' },
+})
+
+const iconClass = cva('mt-0.5 shrink-0', {
+  variants: {
+    variant: {
+      note: 'text-[color:var(--color-admonition-note)]',
+      tip: 'text-[color:var(--color-admonition-tip)]',
+      warning: 'text-[color:var(--color-admonition-warning)]',
+      error: 'text-[color:var(--color-admonition-error)]',
+    },
+  },
+  defaultVariants: { variant: 'note' },
+})
+
+const titleClass = cva('font-semibold', {
+  variants: {
+    variant: {
+      note: 'text-[color:var(--color-admonition-note)]',
+      tip: 'text-[color:var(--color-admonition-tip)]',
+      warning: 'text-[color:var(--color-admonition-warning)]',
+      error: 'text-[color:var(--color-admonition-error)]',
+    },
+  },
+  defaultVariants: { variant: 'note' },
+})
+
+const titleMap: Record<'note' | 'tip' | 'warning' | 'error', string> = {
+  note: 'Note',
+  tip: 'Tip',
+  warning: 'Warning',
+  error: 'Error',
+}
+
+const iconMap: Record<'note' | 'tip' | 'warning' | 'error', string> = {
+  note: 'mdi:information-outline',
+  tip: 'mdi:lightbulb-on-outline',
+  warning: 'mdi:alert-circle-outline',
+  error: 'mdi:alert-octagon-outline',
+}
+
+const label = props.title ?? titleMap[variant]
+const requestedIcon = props.icon ?? props.name
+const iconName = requestedIcon ?? iconMap[variant]
+const classes = [wrapper({ variant }), props.class].filter(Boolean).join(' ')
+---
+
+<div class={classes} role="note" aria-label={label}>
+  <div class="flex items-center gap-3">
+    {
+      showIcon && (
+        <Icon
+          name={iconName}
+          width="20"
+          height="20"
+          class={iconClass({ variant })}
+          aria-hidden="true"
+        />
+      )
+    }
+    <div class={titleClass({ variant })}>{label}</div>
+  </div>
+  <div class="min-w-0">
+    <div class="prose :where(p):my-0">
+      <slot />
+    </div>
+  </div>
+</div>

@@ -1,0 +1,125 @@
+# Starfu CLI
+
+[Starfu](https://github.com/lifeBalance/starfu) is a **scaffolding tool** that creates documentation sites powered by Astro. It sets up a complete docs environment with minimal configuration.
+
+## What It Does
+
+Running `npx starfu` in your project:
+
+```sh
+┌  Starfu
+│
+◆  Site title:
+│  my-project
+│
+◇  Scaffolding complete!
+│
+●  Detected: github.com/username/my-project
+│
+◆  Install dependencies?
+│  ● Yes  ○ No
+│
+◇  Dependencies installed!
+│
+◆  Generate Pagefind search index?
+│  ● Yes  ○ No
+│
+◇  Search index generated!
+│
+◆  Wanna spin up a dev server?
+│  ● Yes  ○ No
+│
+└  Starting dev server...
+```
+
+If no git remote is found, it uses the folder name as the base path and shows a hint to run `starfu deploy` later.
+
+The result is a **clean** structure that doesn't clutter the rest of your project:
+
+```sh
+your-project/
+  ├── .starfu/
+  └── docs/
+```
+
+## Commands
+
+### init (default)
+
+Scaffolds a new Starfu project:
+
+```bash
+npx starfu [--dir path] [--force]
+```
+
+| Option         | Description                                          |
+| -------------- | ---------------------------------------------------- |
+| `--dir <path>` | Target output directory (default: current directory) |
+| `--force`      | Overwrite existing `.starfu` and `docs` folders    |
+
+### deploy
+
+Configures deployment settings:
+
+```bash
+npx starfu deploy
+```
+
+This command:
+- Detects your GitHub/GitLab repository from git remote
+- Shows the site URL and base path that will be used
+- Optionally generates a CI workflow file
+
+See the [Deploy Command](./deploy) page for details.
+
+## Examples
+
+### Basic Usage
+
+Scaffold in the current directory:
+
+```bash
+npx starfu
+```
+
+### Custom Directory
+
+Scaffold into a specific folder:
+
+```bash
+npx starfu --dir my-docs
+```
+
+This creates:
+
+```
+my-docs/
+├── .starfu/
+└── docs/
+```
+
+### Force Overwrite
+
+Re-scaffold an existing project:
+
+```bash
+npx starfu --force
+```
+
+Without `--force`, the CLI will error if `.starfu` or `docs` already exist.
+
+## Installation
+
+Starfu is designed to be used via `npx` without global installation:
+
+```bash
+npx starfu
+```
+
+But you can install **globally** if you're planning to use it in several projects:
+
+```bash
+npm install -g starfu
+```
+
+Your docs will be available at `http://localhost:4321/<repo-name>/`.

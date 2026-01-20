@@ -1,0 +1,54 @@
+---
+interface NavItem { url: string; title: string }
+interface NavGroup { label: string; href?: string; items: NavItem[]; header?: string }
+
+import CollapsibleSection from './CollapsibleSection.astro'
+import GroupHeader from './GroupHeader.astro'
+import SidebarItem from './SidebarItem.astro'
+// import SectionFilter from './SectionFilter.astro'
+
+const { nav, heading = 'Contents', currentPath = '' } = Astro.props as {
+  nav: NavGroup[]
+  heading?: string
+  currentPath?: string
+}
+
+const normalize = (p: string) => (p ? p.replace(/\/$/, '') : '')
+
+// Extract groups for the filter (only groups with items, not single docs)
+const groups = nav
+  .filter(group => group.items.length > 0)
+  .map(group => ({
+    id: group.label.toLowerCase().replace(/\s+/g, '-'),
+    label: group.label,
+  }))
+---
+
+<nav aria-label={heading} class="p-4 min-w-[25%] h-full">
+  <!-- <SectionFilter groups={groups} /> -->
+  {nav.map((group) => {
+    const isActive = group.items.some((i) => normalize(i.url) === normalize(currentPath))
+    const isSingle = group.items.length === 0 && !!group.href
+
+    return (
+      <>
+        {isSingle ? (
+          <>
+            <GroupHeader text={group.header} />
+            <SidebarItem url={group.href!} title={group.label} currentPath={currentPath} />
+          </>
+        ) : (
+          <CollapsibleSection label={group.label} href={group.href} open={isActive} active={isActive} header={group.header}>
+            <ul class="list-none p-0 m-0 pl-3">
+              {group.items.map((item) => (
+                <li>
+                  <SidebarItem url={item.url} title={item.title} currentPath={currentPath} />
+                </li>
+              ))}
+            </ul>
+          </CollapsibleSection>
+        )}
+      </>
+    )
+  })}
+</nav>

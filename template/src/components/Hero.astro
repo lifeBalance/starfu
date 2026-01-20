@@ -1,0 +1,41 @@
+---
+import dancingBanana from '@assets/dancing-banana.gif?url'
+const { rotate = '0deg' } = Astro.props as { rotate?: string }
+---
+<h1 class="text-[clamp(2.5rem,10vw,8rem)] font-black uppercase tracking-tight leading-[0.85] text-sd-fg hero-shadow inline-block" style={`transform: rotate(${rotate});`}>
+  <p>
+    Let's
+  </p>
+  <p>get</p>
+  <span>
+    <span>
+      crack
+      <span class="relative inline-block">
+        i
+        <img
+          src={dancingBanana}
+          alt="Banana on i"
+          class="absolute -translate-x-1/4"
+          style="transform: translate(30%, -700%) scale(3);"
+        />
+      </span>
+      ng
+    </span>
+    <span class="relative inline-block">
+      !
+      <img
+        src={dancingBanana}
+        alt="Banana on bang"
+        class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-[70%]"
+      />
+    </span>
+  </span>
+</h1>
+
+<style>
+  .hero-shadow {
+    text-shadow:
+      0.03em 0.03em 0 var(--color-sd-border),
+      0.05em 0.05em 0 var(--color-sd-accent);
+  }
+</style>

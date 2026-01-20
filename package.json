@@ -1,0 +1,33 @@
+{
+  "name": "starfu",
+  "version": "1.0.2",
+  "type": "module",
+  "bin": {
+    "starfu": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "template"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx ./cli/cli.ts",
+    "test": "vitest",
+    "release": "npm version patch && pnpm build && npm publish --access=public"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.2",
+    "vitest": "^1.6.0"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.0.0",
+    "execa": "^9.6.1"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

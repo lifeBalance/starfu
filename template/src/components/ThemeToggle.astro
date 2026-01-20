@@ -1,0 +1,58 @@
+---
+import { Icon } from 'astro-icon/components'
+---
+
+<button
+  id="theme-toggle"
+  type="button"
+  aria-label="Toggle theme"
+  class="inline-flex items-center gap-2 px-2 py-1 rounded-md no-underline text-(--sd-fg) hover:bg-(--sd-hover) hover:cursor-pointer transition"
+>
+  <span id="icon-sun" aria-hidden="true">
+    <Icon name="mdi:white-balance-sunny" class="text-2xl" />
+  </span>
+  <span id="icon-moon" class="hidden" aria-hidden="true">
+    <Icon name="mdi:moon-waning-crescent" class="text-2xl" />
+  </span>
+</button>
+
+<script>
+  function initTheme() {
+    const root = document.documentElement
+    const btn = document.getElementById('theme-toggle')
+    const iconSun = document.getElementById('icon-sun')
+    const iconMoon = document.getElementById('icon-moon')
+
+    function isDark() {
+      return root.getAttribute('data-theme') === 'dark'
+    }
+
+    function updateIcons() {
+      const dark = isDark()
+      iconSun?.classList.toggle('hidden', dark)
+      iconMoon?.classList.toggle('hidden', !dark)
+    }
+
+    function setTheme(dark: boolean) {
+      if (dark) {
+        root.setAttribute('data-theme', 'dark')
+        localStorage.setItem('theme', 'dark')
+      } else {
+        root.removeAttribute('data-theme')
+        localStorage.removeItem('theme')
+      }
+      updateIcons()
+    }
+
+    // Init from localStorage
+    const saved = localStorage.getItem('theme')
+    if (saved === 'dark') {
+      root.setAttribute('data-theme', 'dark')
+    }
+    updateIcons()
+
+    btn?.addEventListener('click', () => setTheme(!isDark()))
+  }
+
+  document.addEventListener('astro:page-load', initTheme)
+</script>

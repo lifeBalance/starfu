@@ -1,0 +1,9 @@
+---
+const { left = 'Just Go!', right = 'Happy coding!' } = Astro.props as { left?: string; right?: string }
+---
+<footer class="mt-10 border-t border-(--sd-border)">
+  <div class="py-4 flex items-center justify-between text-sm text-(--sd-muted)">
+    <span>{left}</span>
+    <span>{right}</span>
+  </div>
+</footer>

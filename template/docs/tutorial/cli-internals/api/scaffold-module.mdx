@@ -1,0 +1,86 @@
+# Scaffold Module
+
+The scaffold module (`cli/scaffold.ts`) handles file copying during project initialization.
+
+## scaffold
+
+Main scaffolding function.
+
+```ts
+async function scaffold(options: ScaffoldOptions): Promise<void>
+
+interface ScaffoldOptions {
+  templateDir: string
+  outputDir: string
+  force?: boolean
+}
+```
+
+### Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `templateDir` | Path to the template source (the `template/` folder) |
+| `outputDir` | Target directory for scaffolded files |
+| `force` | If true, overwrite existing files (default: false) |
+
+### Behavior
+
+1. Validates that `templateDir` exists
+2. Reads `scaffold-manifest.json` from template directory
+3. For each manifest entry:
+   - Checks if destination exists
+   - Throws error if exists and `force` is false
+   - Removes existing destination if `force` is true
+   - Copies file or folder
+
+### Errors
+
+| Condition | Error |
+|-----------|-------|
+| Template directory not found | `Template directory not found: <path>` |
+| Destination exists (no force) | `'<dest>' already exists. Use --force to overwrite.` |
+
+### Example
+
+```ts
+import { scaffold } from './scaffold'
+
+await scaffold({
+  templateDir: '/path/to/starfu/template',
+  outputDir: '/path/to/my-project',
+  force: false,
+})
+```
+
+## exists
+
+Checks if a path exists.
+
+```ts
+async function exists(target: string): Promise<boolean>
+```
+
+## Manifest Format
+
+The scaffold function reads `scaffold-manifest.json`:
+
+```ts
+interface ManifestEntry {
+  src: string   // Source path relative to templateDir
+  dest: string  // Destination path relative to outputDir
+}
+```
+
+### Copy Behavior
+
+| Source Pattern | Behavior |
+|----------------|----------|
+| `path/to/file` | Copy single file |
+| `path/to/folder/` | Copy folder recursively |
+
+## Dependencies
+
+| Package | Purpose |
+|---------|---------|
+| `node:fs/promises` | Async file operations |

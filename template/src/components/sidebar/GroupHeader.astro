@@ -1,0 +1,22 @@
+---
+/**
+ * GroupHeader - A header label for sidebar groups
+ *
+ * Shows a text label with a bottom border, used to identify groups.
+ * Only renders if `text` is provided.
+ */
+
+interface Props {
+  text?: string
+}
+
+const { text } = Astro.props
+---
+
+{text && (
+  <div class="group-header mb-2 pb-1 border-b border-(--sd-accent)">
+    <span class="text-xs font-semibold uppercase tracking-wide text-(--sd-accent)">
+      {text}
+    </span>
+  </div>
+)}

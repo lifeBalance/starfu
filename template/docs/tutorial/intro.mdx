@@ -1,0 +1,123 @@
+import Admonition from '@components/Admonition.astro'
+import Tabs from '@components/tabs/Tabs.astro'
+import TabItem from '@components/tabs/TabItem.astro'
+
+# Introduction
+
+[Starfu](https://github.com/lifeBalance/starfu) is two things:
+
+- An [Astro integration](https://docs.astro.build/en/guides/integrations-guide/) for building **multi-section documentation sites**. You get a **landing page**, which cards linking to each section. Each section gets its own table of contents.
+- A `starfu` CLI to scaffold the template mentioned above.
+
+## Why Starfu?
+
+Most documentation tools force all content into a **single hierarchy**. Starfu lets you organize content into independent sections—perfect for:
+
+- **Learning paths** with distinct topics (Basics, Advanced, Patterns)
+- **Product docs** with separate guides for different features
+- **Multi-project docs** under one site
+
+Each section is self-contained with its own sidebar navigation, but they all share a unified landing page.
+
+## Key Features
+
+- **Multiple sections** — Each section has independent `_toc.ts` control.
+- **Easy navigation** — Prev/next links, breadcrumbs, and sidebar access.
+- **Smart routing** — Section/group URLs redirect to first content page
+- **Landing page cards** — Auto-generated from section metadata.
+- **Full-text search** — Powered by [Pagefind](https://pagefind.app/).
+- **Dark mode** — Built-in theme toggle.
+- **GitHub Pages ready** — Base path configured automatically.
+
+## Quick Start
+
+<Tabs syncKey="pkg">
+  <TabItem label="pnpm (recommended)">
+    ```sh
+    pnpm dlx starfu
+    ```
+  </TabItem>
+  <TabItem label="npm">
+    ```sh
+    npx starfu
+    ```
+  </TabItem>
+</Tabs>
+
+That's it. You'll be guided through:
+
+```
+┌  Starfu
+│
+◇  Scaffolding complete!
+│
+◆  Install dependencies?
+│  ● Yes  ○ No
+│
+◇  Dependencies installed!
+│
+◆  Generate Pagefind search index?
+│  ● Yes  ○ No
+│
+◇  Search index generated!
+│
+◆  Wanna spin up a dev server?
+│  ● Yes  ○ No
+│
+└  Starting dev server...
+```
+
+## What You Get
+
+After scaffolding, you'll get something like this:
+
+```sh
+your-project/
+  ├── .starfu/     # The Astro engine (treat as tooling)
+  └── docs/          # Your markdown/mdx content goes here
+```
+
+<Admonition>
+ The `docs/` folder include some documentation sections just for illustrative purposes. You're supposed to replace them with your stuff.
+</Admonition>
+
+<Admonition type="tip" title="VS Code Users">
+If you open the project before installing dependencies, you may see a TypeScript error about `astro/tsconfigs/strict` not found. This is safe to ignore—it disappears after running `pnpm install`. If the error persists, run **Developer: Reload Window** from the command palette.
+</Admonition>
+
+Each sections is configured in `.starfu/astro.config.mjs`:
+
+```js
+docsIntegration({
+  title: 'My Docs',
+  sections: [
+    {
+      root: '../docs/my-section',       // Location in fileystem
+      title: 'My Section',              // Title
+      subtitle: 'Getting started guide',// Subtitle
+      href: '/my-section/intro',        // Entry point to docs (file)
+    },
+  ],
+})
+```
+
+## Local Development Server
+
+Run the dev server from `.starfu/`:
+
+<Tabs syncKey="pkg">
+  <TabItem label="pnpm (recommended)">
+    ```bash
+    cd .starfu
+    pnpm dev
+    ```
+  </TabItem>
+  <TabItem label="npm">
+    ```bash
+    cd .starfu
+    npm run dev
+    ```
+  </TabItem>
+</Tabs>
+
+Your docs are served **locally** at `http://localhost:4321/<repo-name>/`. Edit your docs, and see changes in real-time.

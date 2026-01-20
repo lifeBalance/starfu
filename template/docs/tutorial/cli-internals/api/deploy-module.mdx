@@ -1,0 +1,92 @@
+# Deploy Module
+
+The deploy module (`cli/deploy.ts`) handles deployment configuration and CI workflow generation.
+
+## runDeploy
+
+Main entry point for the deploy command.
+
+```ts
+async function runDeploy(cwd: string): Promise<void>
+```
+
+### Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `cwd` | Current working directory (project root) |
+
+### Behavior
+
+1. Detects repository info from git remote
+2. If no remote found, offers manual configuration (prompts for platform, username, repo)
+3. Updates `astro.config.mjs` with values if configured manually
+4. Checks for existing CI workflow
+5. Offers to generate workflow if missing
+6. Shows deployment summary
+
+## detectRepoInfo
+
+Extracts repository information from git remote.
+
+```ts
+function detectRepoInfo(cwd: string): RepoInfo | null
+
+interface RepoInfo {
+  platform: 'github' | 'gitlab'
+  username: string
+  repo: string
+}
+```
+
+### Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `cwd` | Directory to run git command in |
+
+### Returns
+
+Returns `null` if:
+- Not a git repository
+- No remote named `origin`
+- Remote URL doesn't match GitHub/GitLab pattern
+
+### Supported URL Formats
+
+```
+git@github.com:username/repo.git     → { platform: 'github', username, repo }
+https://github.com/username/repo.git → { platform: 'github', username, repo }
+git@gitlab.com:username/repo.git     → { platform: 'gitlab', username, repo }
+https://gitlab.com/username/repo.git → { platform: 'gitlab', username, repo }
+```
+
+## Generated Workflows
+
+### GITHUB_WORKFLOW
+
+GitHub Actions workflow template for deploying to GitHub Pages.
+
+Features:
+- Triggers on push to `main` and manual dispatch
+- Uses pnpm for package management
+- Uploads build artifact
+- Deploys via `actions/deploy-pages`
+
+### GITLAB_CI
+
+GitLab CI template for deploying to GitLab Pages.
+
+Features:
+- Node 20 image
+- pnpm for package management
+- Caches `node_modules`
+- Standard `pages` job for GitLab Pages
+
+## Dependencies
+
+| Package | Purpose |
+|---------|---------|
+| `@clack/prompts` | Interactive CLI prompts |
+| `node:child_process` | Run git commands |
+| `node:fs` | File operations |

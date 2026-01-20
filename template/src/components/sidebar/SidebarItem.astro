@@ -1,0 +1,17 @@
+---
+interface Props {
+  url: string
+  title: string
+  currentPath?: string
+}
+const { url, title, currentPath = '' } = Astro.props as Props
+
+const normalize = (p: string) => p.replace(/\/$/, '')
+const active = normalize(currentPath) === normalize(url)
+
+const base = 'block px-2 py-1 no-underline transition-colors hover:bg-sd-border rounded-sm text-sm mb-1'
+const color = active ? 'bg-sd-border text-sd-fg font-medium' : 'text-sd-muted font-light'
+const cls = `${base} ${color}`
+---
+
+<a href={url} aria-current={active ? 'page' : undefined} class={cls}>{title}</a>

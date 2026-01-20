@@ -1,0 +1,184 @@
+---
+import { Icon } from 'astro-icon/components'
+---
+
+<button
+  id="pf-btn"
+  class="inline-flex items-center justify-between gap-2 text-(--sd-muted) bg-(--sd-bg) px-2 py-1 border border-(--sd-border) shadow-[4px_4px_0_var(--sd-border)] rounded font-light transition-all duration-300 cursor-pointer hover:no-underline hover:bg-(--sd-hover) hover:text-(--sd-muted) hover:shadow-[2px_2px_0_var(--sd-muted)] active:text-(--sd-fg) active:shadow-none active:border-(--sd-muted)"
+>
+  <Icon name="mdi:magnify" />
+  <code class="text-xs"><span id="os">Ctrl</span>+k</code>
+</button>
+
+<div
+  id="search-container"
+  aria-hidden="true"
+  class="fixed top-16 left-0 z-9999 flex flex-col items-center p-8 bg-(--sd-overlay) min-h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] min-w-screen opacity-0 transition-opacity duration-300 overflow-y-auto aria-[hidden=false]:opacity-100 aria-[hidden=false]:pointer-events-auto aria-hidden:opacity-0 aria-hidden:pointer-events-none"
+>
+  <div id="search" class="w-full max-w-200"></div>
+</div>
+
+<script>
+  declare global {
+    interface Window {
+      PagefindUI?: any
+    }
+  }
+
+  let pagefindLoaded = false
+  let pagefindFailed = false
+
+  function loadPagefindAssets(cssUrl: string, jsUrl: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      // Load CSS
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = cssUrl
+      link.onerror = () => reject(new Error('Failed to load pagefind CSS'))
+      document.head.appendChild(link)
+
+      // Load JS
+      const script = document.createElement('script')
+      script.src = jsUrl
+      script.onload = () => resolve()
+      script.onerror = () => reject(new Error('Failed to load pagefind JS'))
+      document.head.appendChild(script)
+    })
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    const btn = document.getElementById('pf-btn')
+    const os = document.getElementById('os')
+    const searchContainer = document.getElementById('search-container')
+    const search = document.getElementById('search')
+    const body = document.body
+    const baseAttr = body?.dataset.pagefindBase || import.meta.env.BASE_URL || '/'
+    const bundleAttr = body?.dataset.pagefindBundle
+
+    if (!bundleAttr) {
+      return
+    }
+
+    const normalizedBase = baseAttr.endsWith('/') ? baseAttr : baseAttr + '/'
+    const bundleName = bundleAttr.replace(/\/$/, '')
+    const bundlePath = normalizedBase + (bundleName.endsWith('/') ? bundleName : bundleName + '/')
+    const cssUrl = `${normalizedBase}${bundleName}/pagefind-ui.css`
+    const jsUrl = `${normalizedBase}${bundleName}/pagefind-ui.js`
+
+    function normalizeUrl(url?: string) {
+      if (!url) return url
+      if (/^(https?:)?\/\//i.test(url)) return url
+      const cleaned = url.replace(/^\//, '')
+      return `${normalizedBase}${cleaned}`
+    }
+
+    function processResult(result: any) {
+      if (!result) return result
+      const url = normalizeUrl(result?.url)
+      const anchors = Array.isArray(result?.anchors)
+        ? result.anchors.map((anchor: any) => ({ ...anchor, url: normalizeUrl(anchor?.url || result?.url) }))
+        : result?.anchors
+      return { ...result, url, anchors }
+    }
+
+    function showUnavailableToast() {
+      if ((window as any).showToast) {
+        (window as any).showToast({
+          message: '<p class="font-medium">Search unavailable</p><p class="text-sm text-(--sd-muted) mt-1">Run <code class="bg-(--sd-hover) px-1 rounded">pnpm build</code> to generate the search index.</p>',
+          duration: 5000
+        })
+      }
+    }
+
+    function initializePagefind() {
+      if (!window.PagefindUI) {
+        return false
+      }
+
+      if (search && !search.dataset.pagefindInitialized) {
+        try {
+          new window.PagefindUI({
+            element: '#search',
+            showSubResults: true,
+            bundlePath,
+            process_result: processResult,
+            showImages: false
+          })
+          search.dataset.pagefindInitialized = 'true'
+          return true
+        } catch (error) {
+          return false
+        }
+      }
+      return true
+    }
+
+    async function ensurePagefindLoaded(): Promise<boolean> {
+      if (pagefindFailed) {
+        return false
+      }
+
+      if (pagefindLoaded) {
+        return true
+      }
+
+      try {
+        await loadPagefindAssets(cssUrl, jsUrl)
+        pagefindLoaded = true
+        // Wait a tick for PagefindUI to be available
+        await new Promise(resolve => setTimeout(resolve, 100))
+        return initializePagefind()
+      } catch (error) {
+        pagefindFailed = true
+        return false
+      }
+    }
+
+    async function toggleSearch() {
+      if (!searchContainer) return
+
+      const isSearchVisible = searchContainer.getAttribute('aria-hidden') === 'false'
+
+      if (isSearchVisible) {
+        // Closing search
+        searchContainer.setAttribute('aria-hidden', 'true')
+        return
+      }
+
+      // Opening search - ensure pagefind is loaded
+      const loaded = await ensurePagefindLoaded()
+
+      if (!loaded) {
+        showUnavailableToast()
+        return
+      }
+
+      searchContainer.setAttribute('aria-hidden', 'false')
+
+      setTimeout(() => {
+        const input = search?.querySelector('input')
+        if (input) input.focus()
+      }, 100)
+    }
+
+    const isMac = window.navigator.userAgent.includes('Mac')
+    if (os) os.textContent = isMac ? 'Cmd' : 'Ctrl'
+
+    btn?.addEventListener('click', () => toggleSearch())
+
+    searchContainer?.addEventListener('click', (event) => {
+      if (event.target === searchContainer) toggleSearch()
+    })
+
+    document.addEventListener('keydown', (event) => {
+      const isShortcutPressed = isMac
+        ? event.metaKey && event.key.toLowerCase() === 'k'
+        : event.ctrlKey && event.key.toLowerCase() === 'k'
+
+      if (isShortcutPressed) {
+        event.preventDefault()
+        toggleSearch()
+      }
+    })
+  })
+</script>

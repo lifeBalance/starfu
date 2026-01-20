@@ -1,0 +1,75 @@
+import Tabs from '@components/tabs/Tabs.astro'
+import TabItem from '@components/tabs/TabItem.astro'
+
+# Tabs
+
+Accessible tabbed interface for organizing related content. Supports syncing tabs across the page.
+
+> Components: `src/components/tabs/Tabs.astro`, `src/components/tabs/TabItem.astro`
+
+## Basic Usage
+
+```mdx
+import Tabs from '@components/tabs/Tabs.astro'
+import TabItem from '@components/tabs/TabItem.astro'
+
+<Tabs>
+  <TabItem label="npm">Option A</TabItem>
+  <TabItem label="pnpm">Option B</TabItem>
+  <TabItem label="yarn">Option C</TabItem>
+</Tabs>
+```
+
+## Synced Tabs
+
+Use `syncKey` to sync tab selection across multiple tab groups on the same page. When a user selects a tab in one group, all groups with the same `syncKey` switch together.
+
+```mdx
+<Tabs syncKey="pkg">
+  <TabItem label="pnpm">pnpm is fast</TabItem>
+  <TabItem label="npm">npm is ubiquitous</TabItem>
+</Tabs>
+
+<Tabs syncKey="pkg">
+  <TabItem label="pnpm">pnpm</TabItem>
+  <TabItem label="npm">npm</TabItem>
+</Tabs>
+```
+
+<Tabs syncKey="pkg">
+  <TabItem label="pnpm">pnpm is fast</TabItem>
+  <TabItem label="npm">npm is ubiquitous</TabItem>
+</Tabs>
+
+Try clicking a tab above, then check the one below:
+
+<Tabs syncKey="pkg">
+  <TabItem label="pnpm">```sh pnpm dev ```</TabItem>
+  <TabItem label="npm">```sh npm run dev ```</TabItem>
+</Tabs>
+
+Synced tabs are persisted in `localStorage`, so the user's preference is remembered across page loads.
+
+## API
+
+### Tabs
+
+| Prop      | Type     | Description                                                   |
+| --------- | -------- | ------------------------------------------------------------- |
+| `syncKey` | `string` | Optional. Sync this tab group with others using the same key. |
+
+### TabItem
+
+| Prop    | Type     | Description                        |
+| ------- | -------- | ---------------------------------- |
+| `label` | `string` | **Required.** The tab button text. |
+
+## How It Works
+
+The component uses:
+
+- **Custom elements** (`<starfu-tabs>`) for JavaScript behavior
+- **rehype processing** to transform `<TabItem>` into accessible tab panels
+- **localStorage** for persisting synced tab preferences
+
+The rehype processor (`src/components/tabs/rehype-tabs.ts`) extracts tab metadata and generates proper ARIA attributes for accessibility.

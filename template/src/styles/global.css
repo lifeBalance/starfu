@@ -1,0 +1,133 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+/* Tailwind v4 theme tokens for IntelliSense-friendly classes */
+@theme {
+  --color-sd-bg: oklch(0.91 0.01 262);
+  --color-sd-fg: lch(32 11.15 284.8);
+  --color-sd-muted: lch(42 11.3 282.59);
+  --color-sd-accent: #f471b7;
+  --color-sd-border: lch(78 7.69 271.97);
+  --color-sd-hover: oklch(0.93 0.01 0);
+  --color-admonition-note: var(--color-blue-500);
+  --color-admonition-tip: var(--color-emerald-500);
+  --color-admonition-warning: var(--color-amber-500);
+  --color-admonition-error: var(--color-red-500);
+}
+
+/* Dark theme overrides */
+[data-theme='dark'] {
+  --color-sd-bg: oklch(0.216 0.006 56.043); /* stone-900 */
+  --color-sd-fg: oklch(0.985 0.001 106.423); /* stone-50 */
+  --color-sd-muted: oklch(0.709 0.01 56.259); /* stone-400 */
+  --color-sd-accent: #65d6e7;
+  --color-sd-border: oklch(0.374 0.01 67.558); /* stone-700 */
+  --color-sd-hover: oklch(0.268 0.007 34.298); /* stone-800 */
+}
+
+/* Maintain legacy CSS variables for runtime reads (e.g., /colors page) */
+:root {
+  --sd-bg: var(--color-sd-bg);
+  --sd-fg: var(--color-sd-fg);
+  --sd-muted: var(--color-sd-muted);
+  --sd-accent: var(--color-sd-accent);
+  --sd-border: var(--color-sd-border);
+  --sd-hover: var(--color-sd-hover);
+  --topbar-height: 4rem;
+  /* Content width variables */
+  --content-max-w: 80rem;
+  --content-pad-x: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --content-max-w: 72rem;
+  }
+}
+@media (min-width: 1024px) {
+  :root {
+    --content-max-w: 80rem;
+  }
+}
+
+/* Shared container for topbar and pages */
+.site-container {
+  max-width: var(--content-max-w);
+  margin-inline: auto;
+  padding-inline: var(--content-pad-x);
+}
+
+/* Global page background bound to theme */
+html,
+body {
+  background-color: var(--sd-bg);
+  color: var(--sd-fg);
+  min-height: 100%;
+}
+
+/* Tie Tailwind Typography (prose) colors to site tokens */
+.prose {
+  --tw-prose-body: var(--color-sd-muted);
+  --tw-prose-headings: var(--color-sd-fg);
+  --tw-prose-links: var(--color-sd-accent);
+  --tw-prose-bold: var(--color-sd-fg);
+  --tw-prose-quotes: var(--color-sd-muted);
+  --tw-prose-hr: var(--color-sd-border);
+  --tw-prose-counters: var(--color-sd-muted);
+  --tw-prose-bullets: var(--color-sd-border);
+  --tw-prose-code: var(--color-sd-fg);
+  --tw-prose-th-borders: var(--color-sd-border);
+  --tw-prose-td-borders: var(--color-sd-border);
+}
+
+.prose :not(pre) > code::before,
+.prose :not(pre) > code::after {
+  content: none;
+}
+
+.prose :not(pre) > code {
+  background: oklch(from var(--color-sd-muted) l c h / 0.7);
+  /* background: var(--color-sd-muted); */
+  color: var(--color-sd-bg);
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+  font-size: 0.85em;
+}
+
+/* Scrollable table */
+.prose table {
+  display: block;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+/* Scrollbar styling */
+.prose > :where(table)::-webkit-scrollbar {
+  height: 5px;
+}
+
+.prose > :where(table)::-webkit-scrollbar-track {
+  background: var(--color-sd-bg);
+}
+
+.prose > :where(table)::-webkit-scrollbar-thumb {
+  background: var(--sd-muted);
+  border-radius: 5px;
+}
+
+.prose > :where(table)::-webkit-scrollbar-thumb:hover {
+  background: var(--color-sd-accent);
+}
+
+.prose table:has(:hover)::-webkit-scrollbar-thumb {
+  background: var(--color-sd-accent);
+}
+
+.pagefind-ui__drawer .svelte-e9gkc3 {
+  background: #a6a09b;
+  border-radius: 1rem;
+  padding: 1rem;
+}

@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "moduleResolution": "node16",
+    "module": "Node16",
+    "outDir": "./dist",
+    "rootDir": "./cli",
+    "declaration": false,
+    "verbatimModuleSyntax": false
+  },
+  "include": ["cli/**/*"],
+  "exclude": ["node_modules", "dist", "tests"]
+}

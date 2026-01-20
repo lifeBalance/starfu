@@ -1,0 +1,159 @@
+# Testing
+
+Starfu uses Vitest for testing. Tests are located in the `tests/` folder.
+
+## Running Tests
+
+```bash
+npm test
+```
+
+## Test Structure
+
+```
+tests/
+├── cli.test.ts         # CLI integration tests
+├── scaffold.test.ts    # Scaffold function tests
+├── tocParser.test.ts   # TOC parser unit tests
+└── integration.test.ts # Docs integration unit tests
+```
+
+## CLI Tests
+
+`tests/cli.test.ts` tests the `run()` function:
+
+### Scaffolds into target directory
+
+```ts
+it('scaffolds into target directory', async () => {
+  const tempDir = await createTempDir()
+  await run(['node', 'cli', '--dir', tempDir])
+  // Verifies scaffolding completes without error
+})
+```
+
+### Supports --force flag
+
+```ts
+it('supports --force to overwrite an existing scaffold', async () => {
+  const tempDir = await createTempDir()
+
+  // First run succeeds
+  await run(['node', 'cli', '--dir', tempDir])
+
+  // Second run without --force throws
+  await expect(run(['node', 'cli', '--dir', tempDir])).rejects.toThrow()
+
+  // Third run with --force succeeds
+  await run(['node', 'cli', '--dir', tempDir, '--force'])
+})
+```
+
+## Scaffold Tests
+
+`tests/scaffold.test.ts` tests the `scaffold()` function:
+
+### Copies template files
+
+```ts
+it('copies template files', async () => {
+  const tempDir = await createTempDir()
+  await scaffold({ templateDir: TEMPLATE_ROOT, outputDir: tempDir })
+
+  // Verifies .starfu and docs folders exist
+  expect(await exists(path.join(tempDir, '.starfu'))).toBe(true)
+  expect(await exists(path.join(tempDir, 'docs'))).toBe(true)
+})
+```
+
+### Refuses to overwrite without force
+
+```ts
+it('refuses to overwrite without force', async () => {
+  const tempDir = await createTempDir()
+  await scaffold({ templateDir: TEMPLATE_ROOT, outputDir: tempDir })
+
+  // Second call throws
+  await expect(scaffold({
+    templateDir: TEMPLATE_ROOT,
+    outputDir: tempDir
+  })).rejects.toThrow()
+})
+```
+
+### Overwrites with force
+
+```ts
+it('overwrites when force is true', async () => {
+  const tempDir = await createTempDir()
+  await scaffold({ templateDir: TEMPLATE_ROOT, outputDir: tempDir })
+
+  // Second call with force succeeds
+  await scaffold({
+    templateDir: TEMPLATE_ROOT,
+    outputDir: tempDir,
+    force: true
+  })
+})
+```
+
+### Replaces placeholders
+
+```ts
+it('replaces placeholders in astro.config.mjs', async () => {
+  const tempDir = await createTempDir()
+
+  // Set up git remote
+  await execa('git', ['init'], { cwd: tempDir })
+  await execa('git', ['remote', 'add', 'origin',
+    'https://github.com/test-user/test-repo.git'], { cwd: tempDir })
+
+  await scaffold({ templateDir: TEMPLATE_ROOT, outputDir: tempDir })
+
+  const config = await readFile(
+    path.join(tempDir, '.starfu', 'astro.config.mjs'),
+    'utf8'
+  )
+
+  // basePath is read from env var with fallback to the replaced placeholder
+  expect(config).toContain("'/test-repo/'")
+  expect(config).toContain('test-user.github.io')
+})
+```
+
+## Test Utilities
+
+Both test files use these helpers:
+
+```ts
+// Create temp directory
+async function createTempDir() {
+  return mkdtemp(path.join(tmpdir(), 'starfu-test-'))
+}
+
+// Clean up temp directory
+async function cleanup(dir: string) {
+  await rm(dir, { recursive: true, force: true })
+}
+
+// Check if path exists
+async function exists(target: string) {
+  try {
+    await stat(target)
+    return true
+  } catch {
+    return false
+  }
+}
+```
+
+## Testing Checklist
+
+When making changes, verify:
+
+- [ ] Scaffold in repo root, base path matches repo name
+- [ ] Scaffold with `--dir tmp`, creates `tmp/.starfu` and `tmp/docs`
+- [ ] Scaffold twice without `--force` throws error
+- [ ] Scaffold with `--force` overwrites existing files
+- [ ] Placeholders replaced when git remote exists
+- [ ] Placeholders unchanged when no git remote

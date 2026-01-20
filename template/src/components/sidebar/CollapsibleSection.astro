@@ -1,0 +1,42 @@
+---
+import { Icon } from 'astro-icon/components'
+import GroupHeader from './GroupHeader.astro'
+
+interface Props {
+  label: string
+  href?: string
+  open?: boolean
+  active?: boolean
+  header?: string
+}
+const { label, href, open = false, active = false, header } = Astro.props as Props
+---
+
+<section class="mb-2">
+  {
+    label && (
+      <>
+        <GroupHeader text={header} />
+        <details class="group" open={open}>
+          <summary
+            class="w-full list-none flex items-center justify-between px-2 py-1 cursor-pointer select-none"
+            aria-expanded={open}
+          >
+            <span
+              class={`text-sm uppercase font-bold ${active ? 'text-sd-accent' : 'text-sd-muted'}`}
+            >
+              {href ? <a href={href}>{label}</a> : label}
+            </span>
+            <Icon
+              name={open ? 'mdi:chevron-down' : 'mdi:chevron-right'}
+              class="text-sd-muted"
+            />
+          </summary>
+          <div class="pl-2">
+            <slot />
+          </div>
+        </details>
+      </>
+    )
+  }
+</section>

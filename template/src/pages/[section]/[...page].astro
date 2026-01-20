@@ -1,0 +1,123 @@
+---
+// Imports: layout and shared UI components rendered around docs content
+import MainLayout from '@layouts/MainLayout.astro'
+import PageBtn from '@components/PageBtn.astro'
+import Footer from '@components/Footer.astro'
+import TocSidebar from '@components/sidebar/TocSidebar.astro'
+import Breadcrumb from '@components/Breadcrumb.astro'
+import DocsToc from '@components/DocsToc.astro'
+
+// Docs engine API: section factory, static paths, prev/next, and resolver/redirect logic
+import {
+  createSection,
+  getDocStaticPaths,
+  getPrevNext,
+  resolveOrNext,
+} from '@lib/docs/section'
+
+// Static paths: enumerate all routes based on files under /docs/**
+export async function getStaticPaths() {
+  return getDocStaticPaths()
+}
+
+// Params from the dynamic route ([section]/[...page])
+// - section: top-level folder under /docs
+// - page: catch-all path within the section (can be array or string)
+const { section, page } = Astro.params as {
+  section: string
+  page?: string | string[]
+}
+// Normalize page to a simple "segment" string (e.g., "variables/intro")
+const segment = Array.isArray(page) ? page.join('/') : page || ''
+
+import { docsConfig } from '@lib/docs/config'
+const basePrefix = docsConfig.basePath.replace(/\/$/, '')
+
+// Build a section-scoped API and decide what to do with the current segment
+// - ok: render the resolved MD/MDX module
+// - redirect: send the user to the first listed item for section/group
+// - not_found: unable to resolve (handled below with a fallback message)
+const branch = docsConfig.branches.find((b) => b.id === section)
+const sectionApi = createSection(section, basePrefix, branch?.root)
+const result = resolveOrNext(sectionApi, segment)
+
+// If section or group root was requested, redirect to its first listed item
+if (result.kind === 'redirect') {
+  return Astro.redirect(result.url)
+}
+
+// From here on, we definitely have a concrete target to show or a safe fallback
+const nav = result.nav
+const currentSegment = result.kind === 'ok' ? result.segment : segment
+// Absolute path to the current doc, used by:
+// - Breadcrumb.
+// - Nav item highlighting.
+// - Prev/next page buttons.
+const currentPath = `${basePrefix}/${section}` + (currentSegment ? `/${currentSegment}` : '')
+
+// Resolve the compiled MD/MDX module for the current segment and pick its default export
+const resolve = sectionApi.resolver()
+const mod = resolve(currentSegment) as any
+const Page = mod?.default
+
+// Compute prev/next links based on the flattened, ordered nav structure
+const { prev, next } = getPrevNext(nav, currentPath)
+---
+
+<MainLayout activeBranch={section}>
+  <div class="flex gap-6 items-start">
+    <!-- Left Sidebar - Table of Contents -->
+    <aside
+      class="sticky self-start overflow-y-auto w-64 shrink-0 border-r border-sd-border [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      style="top: 4rem; height: calc(100vh - 4rem);"
+    >
+      <div class="p-4">
+        <TocSidebar {nav} heading="" {currentPath} />
+      </div>
+    </aside>
+
+    <!-- Central section - Main Content -->
+    <article class="flex-1 min-w-0 pb-12">
+      <div class="py-4">
+        <Breadcrumb path={currentPath} {nav} />
+      </div>
+      <div id="content" class="prose">
+        {
+          Page ? (
+            <Page />
+          ) : (
+            <p>⚠️ Unable to resolve content for {currentPath}</p>
+          )
+        }
+      </div>
+      <div class="mt-8 flex items-center justify-between">
+        {
+          prev ? (
+            <PageBtn href={prev.url} label={prev.title} direction="prev" />
+          ) : (
+            <span />
+          )
+        }
+        {
+          next ? (
+            <PageBtn href={next.url} label={next.title} direction="next" />
+          ) : (
+            <span />
+          )
+        }
+      </div>
+
+      <Footer left={docsConfig.title} right="Happy Coding" />
+    </article>
+
+    <!-- Right Sidebar - On This Page -->
+    <aside
+      class="hidden xl:block sticky self-start overflow-y-auto w-64 shrink-0 border-l border-sd-border [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      style="top: 4rem; height: calc(100vh - 4rem);"
+    >
+      <div class="p-4">
+        <DocsToc />
+      </div>
+    </aside>
+  </div>
+</MainLayout>

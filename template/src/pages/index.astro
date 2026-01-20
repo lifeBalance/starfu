@@ -1,0 +1,44 @@
+---
+import MainLayout from '@layouts/MainLayout.astro'
+import Card from '@components/Card.astro'
+import Hero from '@components/Hero.astro'
+
+import { docsConfig, type DocsBranch } from '@lib/docs/config'
+
+const base = docsConfig.basePath
+const baseWithTrailingSlash = base.endsWith('/') ? base : base + '/'
+
+interface CardData {
+  id: string
+  href: string
+  title: string
+  subtitle: string
+}
+
+const cards: CardData[] = docsConfig.branches.map((branch: DocsBranch) => {
+  const id = branch.root.split('/').pop()!
+  const href = branch.href?.startsWith('/') ? branch.href : `${baseWithTrailingSlash}${id}`
+  return {
+    id,
+    href,
+    title: branch.title ?? id,
+    subtitle: branch.subtitle ?? '',
+  }
+})
+---
+
+<MainLayout hideSearch>
+  <section class="site-container p-6">
+    <div class="flex justify-center items-center mt-10 mb-20">
+      <Hero rotate="-2deg" />
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+      {cards.map((card: CardData) => (
+        <Card href={card.href} astroPrefetch={false}>
+          <h2 class="text-xl font-semibold">{card.title}</h2>
+          {card.subtitle && <p class="text-sm text-sd-muted">{card.subtitle}</p>}
+        </Card>
+      ))}
+    </div>
+  </section>
+</MainLayout>

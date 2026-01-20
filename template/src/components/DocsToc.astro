@@ -1,0 +1,130 @@
+---
+interface Props {
+  rootSelector?: string
+  minLevel?: number
+  maxLevel?: number
+}
+
+const { rootSelector = '#content', minLevel = 1, maxLevel = 3 } = Astro.props
+---
+
+<nav aria-label="On this page" data-toc data-root={rootSelector} data-min={minLevel} data-max={maxLevel}>
+  <h3 class="mb-2 text-sm uppercase font-bold text-sd-muted">On this page</h3>
+  <ul class="list-none p-0 m-0" id="toc-list"></ul>
+</nav>
+
+<script>
+  type Heading = { id: string; text: string; level: number }
+
+  function slugify(s: string) {
+    return s.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-')
+  }
+
+  function getIndentClass(level: number): string {
+    const indents: Record<number, string> = {
+      1: 'pl-0', 2: 'pl-2', 3: 'pl-4', 4: 'pl-6', 5: 'pl-8', 6: 'pl-10'
+    }
+    return indents[level] ?? 'pl-0'
+  }
+
+  function initToc() {
+    const nav = document.querySelector('[data-toc]') as HTMLElement
+    if (!nav) return
+
+    const rootSelector = nav.dataset.root ?? '#content'
+    const minLevel = Number(nav.dataset.min ?? 1)
+    const maxLevel = Number(nav.dataset.max ?? 3)
+    const list = document.getElementById('toc-list')
+    if (!list) return
+
+    let activeId = ''
+    let io: IntersectionObserver | null = null
+    let building = false
+
+    function build() {
+      if (building) return
+      building = true
+
+      const root = document.querySelector(rootSelector) as HTMLElement | null
+      if (!root) {
+        list.innerHTML = ''
+        building = false
+        return
+      }
+
+      const nodes = Array.from(root.querySelectorAll('h1,h2,h3,h4,h5,h6')) as HTMLElement[]
+      const items: Heading[] = []
+
+      for (const el of nodes) {
+        const level = Number(el.tagName.slice(1))
+        if (level < minLevel || level > maxLevel) continue
+
+        let id = el.id
+        if (!id) {
+          const base = slugify(el.textContent ?? '')
+          if (!base) continue
+          let unique = base
+          let i = 1
+          while (root.querySelector(`#${CSS.escape(unique)}`)) {
+            unique = `${base}-${i++}`
+          }
+          el.id = unique
+          id = unique
+        }
+        items.push({ id, text: (el.textContent ?? '').trim(), level })
+      }
+
+      list.innerHTML = items.map(h => `
+        <li class="${getIndentClass(h.level)} text-sm font-light text-sd-muted">
+          <a href="#${h.id}" data-toc-link="${h.id}"
+            class="block py-1 no-underline transition-colors hover:text-sd-fg">
+            ${h.text}
+          </a>
+        </li>
+      `).join('')
+
+      // Cleanup previous observer
+      io?.disconnect()
+
+      // Setup IntersectionObserver
+      io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) {
+              activeId = (e.target as HTMLElement).id
+              updateActive()
+            }
+          }
+        },
+        { root: null, rootMargin: '0px 0px -70% 0px', threshold: 0.1 }
+      )
+      for (const el of nodes) io.observe(el)
+
+      building = false
+    }
+
+    function updateActive() {
+      list.querySelectorAll('[data-toc-link]').forEach(link => {
+        const isActive = link.getAttribute('data-toc-link') === activeId
+        link.classList.toggle('text-sd-accent', isActive)
+        link.classList.toggle('font-medium', isActive)
+        if (isActive) {
+          link.setAttribute('aria-current', 'page')
+        } else {
+          link.removeAttribute('aria-current')
+        }
+      })
+    }
+
+    build()
+
+    // Only observe the content root, not the whole document
+    const root = document.querySelector(rootSelector)
+    if (root) {
+      const mo = new MutationObserver(() => build())
+      mo.observe(root, { subtree: true, childList: true })
+    }
+  }
+
+  document.addEventListener('astro:page-load', initToc)
+</script>

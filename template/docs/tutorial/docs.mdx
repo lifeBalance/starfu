@@ -1,0 +1,129 @@
+import Admonition from '@components/Admonition.astro'
+
+# Writing Docs
+
+This page explains how to add and organize your documentation content.
+
+## Starter Content
+
+The scaffold includes three documentation sections as examples:
+
+- **Tutorial** — The docs you're reading now (self-documentation)
+- **Pancakes** — A silly recipe section
+- **Cocktails** — Another demo section
+
+These exist to show how Starfu works. You'll probably want to **delete them** and add your own content:
+
+```sh
+rm -rf docs/tutorial docs/pancakes docs/cocktails
+```
+
+Then update `.starfu/astro.config.mjs` to remove their section entries.
+
+## Adding Your Own Docs
+
+Documentation folders can live **anywhere** in your project. You just need to:
+
+1. Create a folder with `.mdx` or `.md` files
+2. Register it as a section in `.starfu/astro.config.mjs`
+
+For example, let's create a `gardening` folder, with a `tulip.mdx` file:
+
+```sh
+your-project/
+  ├── .starfu/      # The Astro engine (treat as tooling)
+  └── gardening/      # Your doc files go here.
+    ├── _toc.ts       # The Table Of Contents.
+    └── tulips.mdx    # Your markdown/mdx content goes here.
+```
+
+The `_toc.ts` looks like this:
+
+```ts
+export default [{ path: 'tulips', label: 'How to grow tulips' }]
+```
+
+Then, in `.starfu/astro.config.mjs`, let's wire up the docs:
+
+```js
+docsIntegration({
+  title: 'Starfu',
+  sections: [
+    {
+      root: `../gardening`,       // Path to docs folder (relative to this file)
+      title: 'Gardening Guides',  // Card title on landing page
+      subtitle: 'How to grow stuff', // Card subtitle
+      href: '/gardening/tulips',  // Entry point (first page to show)
+    },
+  ],
+})
+```
+
+<Admonition type="warning">
+The `root` path is relative to the location of `.starfu/astro.config.mjs`.
+</Admonition>
+
+This flexibility lets you:
+
+- Keep docs next to your code.
+- Share docs across multiple projects.
+- Organize however makes sense for your project.
+
+### Section Config Fields
+
+| Field      | Description                                       |
+| ---------- | ------------------------------------------------- |
+| `root`     | Path to the docs folder, relative to `.starfu/` |
+| `title`    | Section title shown on the landing page card      |
+| `subtitle` | Short description shown on the card               |
+| `href`     | URL path to the section's entry page              |
+
+
+## Multiple Sections
+
+Add as many sections as you need:
+
+```js
+sections: [
+  {
+    root: `../gardening`,
+    title: 'Gardening Guides',
+    subtitle: 'How to grow stuff',
+    href: '/gardening/tulips',
+  },
+  {
+    root: '../docs/api',
+    title: 'API Reference',
+    subtitle: 'Function and type docs',
+    href: '/api/overview',
+  },
+  {
+    root: '../docs/examples',
+    title: 'Examples',
+    subtitle: 'Code samples and recipes',
+    href: '/examples/basic',
+  },
+],
+```
+
+Each section gets its own:
+
+- Landing page card
+- Sidebar navigation
+- Table of contents (`_toc.ts`)
+
+## The TOC Files
+
+The `_toc.ts` files are where you organize your documentation:
+
+```js
+export default [
+  { path: 'intro', label: 'Introduction' },
+  { path: 'docs/', label: 'Writing Docs' },
+]
+```
+
+- The `path` property specifies the path to the folder (note the **trailing slash**) or to the file (no extension needed).
+- The `label` is just the title in the sidebar.
+
+These files are used to automatically generate the sidebar.

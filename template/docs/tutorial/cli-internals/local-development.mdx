@@ -1,0 +1,85 @@
+import Admonition from '@components/Admonition.astro'
+
+# Local Development
+
+How to test CLI changes locally before publishing.
+
+## Build & Link
+
+```bash
+# 1. Build the CLI
+pnpm build
+
+# 2. Link globally
+pnpm link --global
+```
+
+Now `starfu` commands use your local build:
+
+```bash
+cd /path/to/test-project
+starfu deploy
+```
+
+To unlink:
+
+```bash
+pnpm unlink --global
+```
+
+<Admonition type="warning" title="pnpm Global Bin Error">
+If you get `ERR_PNPM_NO_GLOBAL_BIN_DIR Unable to find the global bin directory`, run `pnpm setup` to create it automatically, or set the `PNPM_HOME` env variable. The global bin directory must be in your `PATH`.
+</Admonition>
+
+## Run Directly
+
+Skip linking and run the built CLI directly:
+
+```bash
+# From the starfu repo root
+node dist/cli.js deploy
+
+# Or from another directory
+node /path/to/starfu/dist/cli.js deploy
+```
+
+## Watch Mode
+
+For rapid iteration, run TypeScript in watch mode:
+
+```bash
+pnpm tsc --watch -p tsconfig.build.json
+```
+
+Then in another terminal, run commands against `dist/cli.js`.
+
+## Testing Init
+
+Test scaffolding in a temporary directory:
+
+```bash
+mkdir /tmp/test-starfu
+cd /tmp/test-starfu
+node /path/to/starfu/dist/cli.js
+```
+
+Use `--force` to overwrite existing files:
+
+```bash
+node /path/to/starfu/dist/cli.js --force
+```
+
+<Admonition type="tip" title="Cleanup">
+To keep the filesystem clean, use a `foo` prefix for test projects (it's in `.gitignore`). For example: `--dir foo-test`.
+</Admonition>
+
+## Testing Deploy
+
+Test the deploy command in a project with a git remote:
+
+```bash
+cd /path/to/project-with-remote
+node /path/to/starfu/dist/cli.js deploy
+```
+
+If the project has no remote, the command will show a warning and instructions.

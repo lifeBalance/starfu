@@ -1,0 +1,170 @@
+import Admonition from '@components/Admonition.astro'
+import Tabs from '@components/tabs/Tabs.astro'
+import TabItem from '@components/tabs/TabItem.astro'
+
+# Deploying
+
+Starfu is an Astro integration that generates static HTML. Build your docs, then deploy the `dist/` folder anywhere static files are served.
+
+## Building for Production
+
+From the `.starfu/` folder:
+
+<Tabs syncKey="pkg">
+  <TabItem label="pnpm">
+    ```sh
+    pnpm build
+    ```
+  </TabItem>
+  <TabItem label="npm">
+    ```sh
+    npm run build
+    ```
+  </TabItem>
+</Tabs>
+
+This runs:
+1. `astro build` — generates static HTML in `dist/`
+2. `pagefind` — creates the search index
+
+The output is in `.starfu/dist/`, ready to deploy.
+
+## Preview Locally
+
+Before deploying, preview the production build:
+
+<Tabs syncKey="pkg">
+  <TabItem label="pnpm">
+    ```sh
+    pnpm preview
+    ```
+  </TabItem>
+  <TabItem label="npm">
+    ```sh
+    npm run preview
+    ```
+  </TabItem>
+</Tabs>
+
+## Deploy Setup
+
+Starfu auto-detects your repository from git remote. Run the deploy helper from your project root:
+
+```sh
+npx starfu deploy
+```
+
+This will:
+- Detect your GitHub/GitLab repository (or let you configure manually)
+- Show you the site URL and base path that will be used
+- Optionally create a CI workflow file
+
+<Admonition variant="tip">
+  If no git remote is found, `deploy` will offer to configure settings manually by prompting for platform, username, and repo.
+</Admonition>
+
+## GitHub Actions
+
+The deploy command can generate this workflow for you. Or create `.github/workflows/deploy.yml` manually:
+
+```yaml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: .starfu/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install
+        working-directory: .starfu
+
+      - name: Build
+        run: pnpm build
+        working-directory: .starfu
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .starfu/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+Then enable GitHub Pages:
+
+1. Go to **Settings** → **Pages**
+2. Under **Source**, select **GitHub Actions**
+
+<Admonition variant="tip">
+  Push to `main` and your docs will automatically build and deploy.
+</Admonition>
+
+## Manual Deployment
+
+Deploy manually with `gh-pages`:
+
+```sh
+cd .starfu
+pnpm build
+npx gh-pages -d dist
+```
+
+Or configure your repo to serve from the `gh-pages` branch in **Settings** → **Pages**.
+
+## Custom Domain
+
+To use a custom domain:
+
+1. Add a `CNAME` file to `.starfu/public/` with your domain:
+   ```
+   docs.yourdomain.com
+   ```
+
+2. Update `astro.config.mjs`:
+   ```js
+   export default defineConfig({
+     site: 'https://docs.yourdomain.com',
+     base: '/',  // Root path for custom domains
+     // ...
+   })
+   ```
+
+3. Configure DNS to point to GitHub Pages (see [GitHub's docs](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site)).

@@ -1,0 +1,211 @@
+import Admonition from '@components/Admonition.astro'
+import Tabs from '@components/tabs/Tabs.astro'
+import TabItem from '@components/tabs/TabItem.astro'
+
+# Contributing to Starfu
+
+This guide will help you set up Starfu for local development.
+
+## Prerequisites
+
+- Node.js 18+
+- pnpm (recommended) or npm
+
+## Project Structure
+
+Starfu is organized into two main parts:
+
+```sh
+starfu/
+├── cli/              # CLI source code
+│   ├── cli.ts        # Main CLI entry point
+│   └── scaffold.ts   # Scaffolding logic
+├── template/         # Astro docs site template
+│   ├── src/          # Astro components and lib code
+│   └── docs/         # Documentation content (template development)
+└── tests/            # Test suite
+```
+
+- **CLI** (`/cli`): The `npx starfu` command that scaffolds new projects
+- **Template** (`/template`): The Astro-based documentation site that gets copied to user projects
+
+## Getting Started
+
+Clone the repository and install dependencies:
+
+```bash
+git clone https://github.com/lifeBalance/starfu.git
+cd starfu
+pnpm install
+```
+
+Then install the template dependencies:
+
+```bash
+cd template
+pnpm install
+```
+
+## Development Workflows
+
+### Working on the CLI
+
+The CLI lives in the `/cli` directory. To test CLI changes:
+
+```bash
+# From the root directory (interactive)
+pnpm dev init --dir ./test-output
+
+# Non-interactive (useful for testing/CI)
+pnpm dev init --dir ./test-output --platform github --username my-user --repo my-repo
+```
+
+This runs the CLI in development mode using `tsx`.
+
+#### CLI Flags
+
+| Flag                          | Description                                   |
+| ----------------------------- | --------------------------------------------- |
+| `--dir <path>`                | Output directory (default: current directory) |
+| `--force`                     | Overwrite existing files                      |
+| `--platform <github\|gitlab>` | Deployment platform                           |
+| `--username <name>`           | GitHub/GitLab username or organization        |
+| `--repo <name>`               | Repository name                               |
+
+When all three (`--platform`, `--username`, `--repo`) are provided, the CLI runs non-interactively.
+
+### Working on the Template
+
+The template is a full Astro site in `/template`. This is what users get when they run `starfu`.
+
+To develop the template (modify Astro components, layouts, styles, and documentation content), use the template scripts:
+
+```bash
+cd template
+pnpm dev:template
+```
+
+This starts a dev server at `http://localhost:4321/starfu/` with the documentation site.
+
+<Admonition type="tip" title="Enabling Search">
+Search is lazy-loaded and requires a build to generate the Pagefind index. If you need search during development, use:
+
+```bash
+pnpm dev:template:pagefind
+```
+
+This builds the site first (to generate the search index), then starts the dev server. Without it, clicking search shows "Search unavailable".
+</Admonition>
+
+<Admonition type="note" title="Environment Variables">
+The template scripts set environment variables to simulate deployment:
+
+- `STARFU_PLATFORM=github`
+- `STARFU_USERNAME=lifeBalance`
+- `STARFU_REPO=starfu`
+- `STARFU_DOCS_ROOT=./docs`
+
+These override the placeholders in `astro.config.mjs`. The `DOCS_ROOT` is `./docs` for template development (docs inside template/) vs `../docs` for scaffolded projects (docs outside `.starfu/`).
+</Admonition>
+
+To build the template for production:
+
+```bash
+pnpm build:template
+```
+
+### Deploying the Template
+
+Pushing to `main` triggers the GitHub Actions workflow at `.github/workflows/deploy.yml`, which builds the template and deploys it to GitHub Pages.
+
+To enable this, go to the repo **Settings → Pages → Source** and select **"GitHub Actions"**.
+
+### Scaffolded Project Commands
+
+After scaffolding a project with `starfu`, these commands are available from the `.starfu/` directory:
+
+```bash
+pnpm dev      # Start dev server
+pnpm build    # Build for production
+pnpm preview  # Preview production build
+```
+
+### Key Files
+
+When working on the template, these are the most important locations:
+
+| Location          | Purpose                                                  |
+| ----------------- | -------------------------------------------------------- |
+| `src/lib/docs/`   | Core documentation engine (routing, TOC parsing, config) |
+| `src/components/` | Reusable Astro components                                |
+| `src/layouts/`    | Page layouts                                             |
+| `src/pages/`      | Astro pages and dynamic routes                           |
+| `docs/`           | Documentation content (MDX files)                        |
+
+## Running Tests
+
+Tests use Vitest and cover the CLI, scaffolding, and core library functions:
+
+```bash
+# From the root directory
+pnpm test
+```
+
+To run tests in watch mode:
+
+```bash
+pnpm test -- --watch
+```
+
+## Publishing to npm
+
+Any change to `cli/` or `template/` requires a new publish, since both are included in the npm package. Bump the version first — npm won't let you overwrite a published version:
+
+```bash
+pnpm release
+```
+
+This runs `npm version patch`, builds the CLI, and publishes. For minor or major bumps, run the steps manually:
+
+```bash
+npm version minor   # or: major
+pnpm build
+npm publish --access=public
+```
+
+npm will prompt for a one-time password (2FA). You can also pass it inline:
+
+```bash
+npm publish --access=public --otp=123456
+```
+
+<Admonition type="note" title="What gets published">
+The `files` field in `package.json` controls what's included in the npm package: `dist/` (compiled CLI) and `template/` (the Astro site that gets scaffolded). Source code in `cli/` and `tests/` is excluded.
+</Admonition>
+
+<Admonition type="tip" title="Before publishing">
+Make sure `execa` stays in `dependencies` (not `devDependencies`) — it's used at runtime by the CLI. Run `npm pack --dry-run` to preview what files will be included.
+</Admonition>
+
+<Admonition type="warning" title="When to republish">
+Changes to the GitHub Pages site only (docs content viewed at the live demo) are deployed automatically via the GitHub Actions workflow — no npm publish needed. But if you change anything in `cli/` or `template/` that affects what users get when they run `npx starfu`, you must publish a new version.
+</Admonition>
+
+## Code Style
+
+- Use single quotes and no semicolons (Prettier is configured)
+- Format Astro files with `prettier-plugin-astro`
+
+## Making Changes
+
+1. Create a feature branch from `main`
+2. Make your changes
+3. Run tests to ensure nothing is broken
+4. Submit a pull request
+
+<Admonition type="note" title="Template vs Scaffolded Output">
+  Remember that the `/template` directory is what gets copied during
+  scaffolding. The `astro.config.mjs` file contains placeholder values
+  (`%%PLATFORM%%`, `%%USERNAME%%`, `%%REPO%%`) that get replaced during
+  `starfu init`.
+</Admonition>

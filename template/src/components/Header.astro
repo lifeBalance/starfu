@@ -1,0 +1,46 @@
+---
+import ThemeToggle from '@components/ThemeToggle.astro'
+import PageFind from '@components/PageFind.astro'
+import RepoLink from '@components/RepoLink.astro'
+import { docsConfig } from '@lib/docs/config'
+import logo from '@assets/logo.svg?url'
+
+const base = docsConfig.basePath
+const homeHref = base.endsWith('/') ? base : base + '/'
+const hidden = Astro.props?.hideSearch === true
+---
+
+<nav class="sticky top-0 z-50 bg-sd-bg text-sd-fg border-b border-sd-border">
+  <div
+    class="site-container flex items-center justify-between px-4 py-2 h-(--topbar-height)"
+  >
+    <div class="flex items-center gap-3">
+      <a href={homeHref} class="inline-flex items-center gap-3">
+        <span aria-hidden="true"
+          ><img src={logo} alt="site-logo" class="h-6 w-6" /></span
+        >
+        <span>
+          <span
+            class="relative inline-block px-1 py-[0.5] bg-sd-fg rounded-sm group hover:bg-sd-accent transition-colors"
+          >
+            <h1
+              class="prose text-2xl md:text-4xl font-black uppercase italic tracking-tight leading-none bg-sd-bg bg-clip-text text-transparent"
+            >
+              {docsConfig.title}
+            </h1>
+          </span>
+        </span>
+      </a>
+    </div>
+    <div class="flex items-center gap-3">
+      {hidden ? null : <PageFind />}
+      <a
+        href={`${base}/colors`}
+        class="text-sm no-underline text-sd-muted hover:text-sd-accent"
+        >Colors</a
+      >
+      <ThemeToggle />
+      <RepoLink />
+    </div>
+  </div>
+</nav>

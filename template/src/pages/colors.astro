@@ -1,0 +1,43 @@
+---
+import MainLayout from '@layouts/MainLayout.astro'
+const vars = ['--sd-bg','--sd-fg','--sd-muted','--sd-accent','--sd-border','--sd-hover']
+---
+<MainLayout>
+  <section class="min-h-[calc(100vh-var(--topbar-height))] flex flex-col items-center justify-center">
+    <h1 class="text-2xl mb-2">Color Tokens</h1>
+    <p class="text-sm text-(--sd-muted)">Theme: <span data-theme-label>light</span></p>
+
+    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      {vars.map((v) => (
+        <div class="rounded-md border border-(--sd-border)">
+          <div class="h-16 rounded-t-md" style={`background: var(${v})`}></div>
+          <div class="p-2 text-sm">
+            <div><code>{v}</code></div>
+            <div class="text-(--sd-muted)" data-var={v}></div>
+          </div>
+        </div>
+      ))}
+    </div>
+    <script>
+      const VARS = ['--sd-bg','--sd-fg','--sd-muted','--sd-accent','--sd-border','--sd-hover']
+      const refresh = () => {
+        try {
+          const style = getComputedStyle(document.documentElement)
+          for (const v of VARS) {
+            const el = document.querySelector(`[data-var="${v}"]`)
+            if (!el) continue
+            const val = style.getPropertyValue(v).trim()
+            el.textContent = val
+          }
+          const th = document.querySelector('[data-theme-label]')
+          if (th) th.textContent = document.documentElement.getAttribute('data-theme') || 'light'
+        } catch {}
+      }
+      document.addEventListener('DOMContentLoaded', () => {
+        refresh()
+        const obs = new MutationObserver(refresh)
+        obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+      })
+    </script>
+  </section>
+</MainLayout>

@@ -1,0 +1,94 @@
+# Template Internals Overview
+
+The `template` folder is an [Astro](https://astro.build/) project with the following structure:
+
+```sh
+.
+├── astro.config.mjs
+├── docs
+├── docs-registry.ts
+├── ec.config.mjs
+├── package.json
+├── scaffold-manifest.json
+├── src
+└── tsconfig.json
+```
+
+## The Multiroot Engine
+
+The code that makes Asterism special lives in `src/lib/docs`:
+
+```sh
+src/lib/docs
+├── build-pagefind.ts    # Pagefind search index builder
+├── config.ts            # Configuration and glob registries
+├── defaults.ts          # Default values
+├── index.ts             # Public exports
+├── integration.ts       # Astro integration
+├── section.ts           # Section API (entries, resolver, nav)
+└── tocParser.ts         # _toc.ts file parser
+```
+
+Understanding these internals is useful for debugging, extending the engine, or contributing.
+
+## Data Flow
+
+```
+astro.config.mjs
+       │
+       ▼
+docsIntegration({ sections })
+       │
+       ▼
+docsConfig (branches, globs, basePath)
+       │
+       ▼
+createSection(sectionId)
+       │
+       ├── entries()   → List all content files
+       ├── resolver()  → Resolve segment to MDX module
+       └── nav()       → Build sidebar navigation
+              │
+              ▼
+       resolveOrNext(api, segment)
+              │
+              ├── 'ok'       → Render content
+              ├── 'redirect' → Go to first item
+              └── 'not_found' → Show fallback
+```
+
+## Key Concepts
+
+### Branches
+
+A "branch" is Asterism's internal name for a section. Each branch has:
+
+- `id` — Unique identifier (derived from folder name)
+- `root` — Filesystem path to content
+- Metadata — `title`, `subtitle`, `href`
+
+### Segments
+
+A "segment" is the URL path after the section prefix:
+
+- URL `/tutorial/basics/intro` → Segment `basics/intro`
+- URL `/tutorial` → Segment `` (empty)
+
+### Globs
+
+Asterism uses `import.meta.glob` to discover content:
+
+- Content globs: `**/*.{md,mdx}`
+- TOC globs: `**/_toc.ts`
+
+These are registered per-branch in the config.
+
+## Module Responsibilities
+
+| Module           | Purpose                                                   |
+| ---------------- | --------------------------------------------------------- |
+| `config.ts`      | Holds `docsConfig` with branches, globs, and basePath     |
+| `section.ts`     | Creates section-scoped APIs for routing and navigation    |
+| `tocParser.ts`   | Parses `_toc.ts` into ordered lists, aliases, hidden sets |
+| `integration.ts` | Astro integration that sets up virtual modules            |
+| `defaults.ts`    | Default configuration values                              |

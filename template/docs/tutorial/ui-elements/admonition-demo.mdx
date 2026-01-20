@@ -1,0 +1,98 @@
+---
+title: Admonition Component
+---
+import Admonition from '@components/Admonition.astro'
+
+# Admonition
+
+Reusable callouts for notes, tips, warnings, and errors. Built with `class-variance-authority` and `astro-icon`.
+
+> Component: `src/components/Admonition.astro`
+
+## Basic Usage
+
+```astro
+---
+import Admonition from '@components/Admonition.astro'
+---
+
+<Admonition>
+  Docs are generated at build time.
+</Admonition>
+```
+
+<Admonition>
+  Docs are generated at build time.
+</Admonition>
+
+## Variants
+
+Pass `variant="note | tip | warning | error"`.
+
+```astro
+<Admonition variant="note">Notes convey extra context.</Admonition>
+<Admonition variant="tip">Use `_toc.ts` to control order.</Admonition>
+<Admonition variant="warning">Hidden items are omitted from nav.</Admonition>
+<Admonition variant="error">Unable to resolve the requested page.</Admonition>
+```
+
+<Admonition variant="note">Notes convey extra context.</Admonition>
+<Admonition variant="tip">Use `_toc.ts` to control order.</Admonition>
+<Admonition variant="warning">Hidden items are omitted from nav.</Admonition>
+<Admonition variant="error">Unable to resolve the requested page.</Admonition>
+
+## Custom Title & Icon
+
+Override the default heading and icon.
+
+```astro
+<Admonition variant="tip" title="Pro Tip" icon="mdi:pencil-circle">
+  Group entries end with a trailing slash.
+</Admonition>
+```
+
+<Admonition variant="tip" title="Pro Tip" icon="mdi:pencil-circle">
+  Group entries end with a trailing slash.
+</Admonition>
+
+## Hide Icon
+
+```astro
+<Admonition variant="warning" showIcon={false}>
+  This admonition has no icon on the left.
+</Admonition>
+```
+
+<Admonition variant="warning" showIcon={false}>
+  This admonition has no icon on the left.
+</Admonition>
+
+## API
+
+- Props
+  - `variant?: 'note' | 'tip' | 'warning' | 'error'` (default: `note`)
+  - `title?: string` — override default label.
+  - `icon?: string` — Iconify name (e.g., `mdi:alert-circle-outline`).
+  - `showIcon?: boolean` (default: `true`).
+  - `class?: string` — additional classes.
+
+- Icons
+  - Uses `astro-icon`. Ensure `@iconify-json/mdi` is installed and the integration is enabled in `astro.config.mjs`.
+
+- Styling
+  - Variants are powered by `class-variance-authority` in the component.
+
+```ts
+// src/components/Admonition.astro (excerpt)
+const wrapper = cva('mb-4 rounded-md border p-4 text-sm', {
+  variants: {
+    variant: {
+      note: 'bg-blue-50 border-blue-200 text-blue-900 ...',
+      tip: 'bg-emerald-50 border-emerald-200 text-emerald-900 ...',
+      warning: 'bg-amber-50 border-amber-200 text-amber-900 ...',
+      error: 'bg-red-50 border-red-200 text-red-900 ...',
+    },
+  },
+  defaultVariants: { variant: 'note' },
+})
+```

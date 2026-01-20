@@ -1,0 +1,163 @@
+# Content Structure
+
+This page covers how to organize your docs, configure sections, and how navigation works.
+
+## Folder Structure
+
+Each section has its own folder with `_toc.ts` files that control sidebar order and labels.
+
+```sh
+docs/
+└── my-section/
+    ├── _toc.ts              # Section's table of contents
+    ├── getting-started.mdx  # Single document
+    ├── basics/              # Group (subfolder)
+    │   ├── _toc.ts          # Group's table of contents
+    │   ├── intro.mdx
+    │   └── variables.mdx
+    └── advanced/
+        ├── _toc.ts
+        └── patterns.mdx
+```
+
+## The `_toc.ts` File
+
+Each `_toc.ts` exports an array that controls:
+
+- **Order** — Items appear in the sidebar in array order
+- **Labels** — Custom labels for sidebar display
+- **Visibility** — Unlisted files don't appear in navigation
+
+### Section Root `_toc.ts`
+
+```ts
+// docs/my-section/_toc.ts
+export default [
+  { path: 'getting-started', label: 'Getting Started' },
+  { path: 'basics/', label: 'Basics' },     // Group (ends with /)
+  { path: 'advanced/', label: 'Advanced' }, // Group (ends with /)
+]
+```
+
+- **Groups** end with `/` and render as collapsible sections
+- **Single docs** don't have a trailing slash
+
+### Group `_toc.ts`
+
+```ts
+// docs/my-section/basics/_toc.ts
+export default [
+  { path: 'intro', label: 'Introduction' },
+  { path: 'variables', label: 'Variables' },
+]
+```
+
+### Hidden Items
+
+Files not listed in `_toc.ts` are still accessible via direct URL but excluded from navigation. To explicitly hide a listed item:
+
+```ts
+export default [
+  { path: 'intro', label: 'Introduction' },
+  { path: 'draft', label: 'Draft Page', hidden: true },
+]
+```
+
+## Configuring Sections
+
+Sections are configured in `.starfu/astro.config.mjs`:
+
+```js
+import docsIntegration from './src/lib/docs/integration'
+
+export default defineConfig({
+  integrations: [
+    docsIntegration({
+      title: 'My Documentation',
+      sections: [
+        {
+          root: '../docs/tutorial',
+          title: 'Tutorial',
+          subtitle: 'Learn the basics',
+          href: '/tutorial/intro',
+        },
+        {
+          root: '../docs/api',
+          title: 'API Reference',
+          subtitle: 'Complete API docs',
+          href: '/api/overview',
+        },
+      ],
+    }),
+  ],
+})
+```
+
+### Section Options
+
+| Option     | Required | Description                                               |
+| ---------- | -------- | --------------------------------------------------------- |
+| `root`     | Yes      | Path to content folder (relative to `.starfu/`)         |
+| `title`    | No       | Display title for landing page card                       |
+| `subtitle` | No       | Description shown on landing page card                    |
+| `href`     | No       | Custom URL for card link (defaults to first `_toc.ts` item) |
+
+### Section ID
+
+The section ID is derived from the last part of the `root` path:
+
+```js
+{ root: '../docs/tutorial' }  // ID: 'tutorial'
+{ root: '../docs/api-ref' }   // ID: 'api-ref'
+```
+
+## URL Structure
+
+URLs follow the pattern `/<section>/<path>`:
+
+```
+/tutorial/intro              → docs/tutorial/intro.mdx
+/tutorial/basics/variables   → docs/tutorial/basics/variables.mdx
+```
+
+### Smart Redirects
+
+Visiting a section or group URL redirects to the first listed item:
+
+| URL                | Redirects To                                         |
+| ------------------ | ---------------------------------------------------- |
+| `/tutorial`        | `/tutorial/intro` (first item in section `_toc.ts`)  |
+| `/tutorial/basics` | `/tutorial/basics/intro` (first item in group)       |
+
+## Sidebar Navigation
+
+The sidebar is built from `_toc.ts` files:
+
+```
+Tutorial                    ← Section title
+├── Introduction            ← Single doc
+├── ▼ Basics                ← Group (collapsible)
+│   ├── Intro
+│   └── Variables
+└── ▼ Advanced
+    └── Patterns
+```
+
+## Prev/Next Links
+
+At the bottom of each page, prev/next links follow the flattened `_toc.ts` order across all groups in the section.
+
+## Breadcrumbs
+
+Breadcrumbs show the path to the current page. Each segment is clickable and navigates to the first item in that section or group.
+
+```
+Tutorial / Basics / Variables
+```
+
+## Best Practices
+
+1. **Always create `_toc.ts`** — Being explicit prevents ordering surprises
+2. **Use meaningful labels** — Labels appear in the sidebar, not filenames
+3. **Group related content** — Use subfolders for logical groupings
+4. **Keep paths simple** — Avoid deep nesting (2-3 levels max)

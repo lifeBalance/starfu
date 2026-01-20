@@ -1,0 +1,16 @@
+---
+import { Icon } from 'astro-icon/components'
+
+const platform = import.meta.env.STARFU_PLATFORM || 'github'
+const username = import.meta.env.STARFU_USERNAME || ''
+const repo = import.meta.env.STARFU_REPO || ''
+const domain = platform === 'gitlab' ? 'gitlab.com' : 'github.com'
+const repoUrl = username && repo ? `https://${domain}/${username}/${repo}` : ''
+const repoIcon = platform === 'gitlab' ? 'mdi:gitlab' : 'mdi:github'
+---
+
+{repoUrl && (
+  <a href={repoUrl} target="_blank" rel="noopener noreferrer" class="text-sd-muted hover:text-sd-accent transition-colors">
+    <Icon name={repoIcon} class="text-2xl" />
+  </a>
+)}

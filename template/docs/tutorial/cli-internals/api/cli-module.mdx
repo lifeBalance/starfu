@@ -1,0 +1,122 @@
+# CLI Module
+
+The CLI module (`cli/cli.ts`) is the entry point for the Starfu command.
+
+## run
+
+Main entry point that orchestrates scaffolding, deploy, and interactive prompts.
+
+```ts
+async function run(argv?: string[]): Promise<{
+  templateDir: string
+  outputDir: string
+} | void>
+```
+
+### Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `argv` | Command line arguments (default: `process.argv`) |
+
+### Returns
+
+For `init` command:
+
+| Property | Description |
+|----------|-------------|
+| `templateDir` | Path to the template source (`template/` folder) |
+| `outputDir` | Path where files were scaffolded |
+
+For `deploy` command: returns `void`.
+
+### Example
+
+```ts
+import { run } from './cli'
+
+// Programmatic usage
+const { outputDir } = await run(['node', 'cli', '--dir', '/tmp/test'])
+```
+
+## parseArgs
+
+Parses command line arguments into options.
+
+```ts
+function parseArgs(argv: string[]): CliOptions
+
+interface CliOptions {
+  command: 'init' | 'deploy'
+  dir?: string
+  force?: boolean
+}
+```
+
+### Supported Arguments
+
+| Argument | Option |
+|----------|--------|
+| `deploy` | `{ command: 'deploy' }` |
+| `--dir <path>` | `{ dir: path }` |
+| `--dir=<path>` | `{ dir: path }` |
+| `--force` | `{ force: true }` |
+
+## Commands
+
+### init (default)
+
+Scaffolds a new project. See [Interactive Flow](#interactive-flow).
+
+### deploy
+
+Runs the deploy helper. See [Deploy Module](./deploy-module).
+
+## Interactive Flow
+
+When `stdin.isTTY` is true, the CLI shows prompts using `@clack/prompts`:
+
+1. **Scaffolding** — Always runs first (with spinner)
+2. **Install dependencies?** — Runs `pnpm install` in `.starfu`
+3. **Generate Pagefind?** — Runs `pnpm build` to create search index
+4. **Start dev server?** — Runs `pnpm dev` with inherited stdio
+
+If any prompt is cancelled (Ctrl+C), the CLI exits gracefully.
+
+## Non-TTY Behavior
+
+When stdin is not a TTY:
+
+- Scaffolding runs normally
+- All interactive prompts are skipped
+- Prints instructions for manual setup
+
+## Package Manager Detection
+
+The CLI auto-detects the package manager:
+
+1. Checks `npm_config_user_agent` (set when invoked via `pnpm dlx`, `npx`, etc.)
+2. Falls back to checking lockfiles (`pnpm-lock.yaml`, `yarn.lock`, etc.)
+3. Defaults to `pnpm`
+
+## Dependencies
+
+| Package | Purpose |
+|---------|---------|
+| `@clack/prompts` | Interactive CLI prompts with spinners |
+| `execa` | Async command execution |
+
+## Entry Point Detection
+
+The module detects if it's the entry point using:
+
+```ts
+const realArgv = realpathSync(process.argv[1])
+const realModule = new URL(import.meta.url).pathname
+
+if (realArgv === realModule) {
+  run()
+}
+```
+
+Using `realpathSync` handles symlinks (important for `npm link`).

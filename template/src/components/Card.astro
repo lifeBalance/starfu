@@ -1,0 +1,25 @@
+---
+const {
+  href = '#',
+  rel = undefined,
+  ariaLabel = undefined,
+  class: className = '',
+  astroPrefetch = false,
+} = Astro.props as {
+  astroPrefetch?: boolean
+  href?: string
+  rel?: string
+  ariaLabel?: string
+  class?: string
+}
+---
+
+<a
+  href={href}
+  rel={rel}
+  aria-label={ariaLabel}
+  data-astro-prefetch={astroPrefetch ? 'true' : 'false'}
+  class={`block rounded-lg border border-sd-border bg-sd-hover px-5 py-4 text-sd-fg no-underline hover:bg-sd-hover/80 hover:border-sd-accent transition ${className}`}
+>
+  <slot />
+</a>

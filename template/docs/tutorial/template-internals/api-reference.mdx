@@ -1,0 +1,233 @@
+# API Reference
+
+Internal APIs for the docs engine. Useful for debugging or extending Asterism.
+
+## Configuration (`config.ts`)
+
+### docsConfig
+
+The main configuration object, populated by `docsIntegration()`:
+
+```ts
+interface DocsConfig {
+  title: string
+  basePath: string
+  branches: Branch[]
+}
+
+interface Branch {
+  id: string
+  root: string
+  title?: string
+  subtitle?: string
+  href?: string
+}
+```
+
+### getGlobRegistry()
+
+Returns `import.meta.glob` maps for content and TOC files:
+
+```ts
+const registry = getGlobRegistry()
+
+registry.content['tutorial']
+// => { './intro.mdx': () => import(...), './basics/vars.mdx': () => import(...) }
+
+registry.toc['tutorial']
+// => { './_toc.ts': () => import(...), './basics/_toc.ts': () => import(...) }
+```
+
+---
+
+## Section API (`section.ts`)
+
+### createSection()
+
+Builds a section-scoped API for querying content and navigation:
+
+```ts
+function createSection(
+  section: string,
+  basePath?: string,
+  contentRoot?: string
+): SectionAPI
+
+interface SectionAPI {
+  base: string
+  entries(): Entry[]
+  resolver(): (segment: string) => MdModule | undefined
+  nav(): { nav: NavGroup[] }
+}
+```
+
+### .base
+
+The full URL prefix for this section:
+
+```ts
+createSection('tutorial', '/my-repo').base
+// => '/my-repo/tutorial'
+```
+
+### .entries()
+
+Returns all content entries in the section:
+
+```ts
+createSection('tutorial').entries()
+// => [
+//   { url: '/tutorial/intro', title: 'intro' },
+//   { url: '/tutorial/basics/vars', title: 'vars' },
+// ]
+```
+
+### .resolver()
+
+Returns a function that resolves segments to MDX modules:
+
+```ts
+const resolve = createSection('tutorial').resolver()
+
+resolve('basics/vars')  // => MdModule (truthy)
+resolve('nonexistent')  // => undefined
+```
+
+### .nav()
+
+Builds the sidebar navigation structure:
+
+```ts
+createSection('tutorial').nav()
+// => {
+//   nav: [
+//     { dir: '', label: 'Tutorial', items: [...] },
+//     { dir: 'basics', label: 'Basics', items: [...] },
+//   ],
+// }
+```
+
+---
+
+## Routing (`section.ts`)
+
+### getDocStaticPaths()
+
+Generates all static paths for the docs route:
+
+```ts
+getDocStaticPaths()
+// => [
+//   { params: { section: 'tutorial', page: 'intro' } },
+//   { params: { section: 'tutorial', page: 'basics/vars' } },
+//   { params: { section: 'tutorial' } },  // Section root
+// ]
+```
+
+### resolveOrNext()
+
+Determines what to do for a given URL segment:
+
+```ts
+function resolveOrNext(
+  sectionApi: SectionAPI,
+  segment: string
+): ResolveResult
+
+type ResolveResult =
+  | { kind: 'ok'; segment: string; nav: NavGroup[] }
+  | { kind: 'redirect'; url: string; nav: NavGroup[] }
+  | { kind: 'not_found'; nav: NavGroup[] }
+```
+
+Behavior:
+
+| Segment              | Result                                 |
+| -------------------- | -------------------------------------- |
+| `''` (empty)         | `redirect` to first item in section    |
+| `'basics'` (group)   | `redirect` to first item in group      |
+| `'basics/vars'` (doc)| `ok` if exists, `not_found` otherwise  |
+
+### getPrevNext()
+
+Computes previous/next links from navigation:
+
+```ts
+function getPrevNext(
+  nav: NavGroup[],
+  currentPath: string
+): {
+  prev?: { url: string; title: string }
+  next?: { url: string; title: string }
+}
+```
+
+---
+
+## TOC Parser (`tocParser.ts`)
+
+### parseTocConfig()
+
+Normalizes `_toc.ts` exports into a consistent structure:
+
+```ts
+function parseTocConfig(raw: unknown): {
+  ordered: TocItem[]
+  alias: Map<string, string>
+  hidden: Set<string>
+}
+
+interface TocItem {
+  path: string
+  label: string
+  hidden?: boolean
+}
+```
+
+### Input Formats
+
+**Object format (recommended):**
+
+```ts
+export default [
+  { path: 'intro', label: 'Introduction' },
+  { path: 'basics/', label: 'Basics' },
+  { path: 'draft', label: 'Draft', hidden: true },
+]
+```
+
+**String format (simple):**
+
+```ts
+export default ['intro', 'basics/', 'advanced/']
+```
+
+### Error Handling
+
+The parser is lenient—invalid entries are skipped, missing `_toc.ts` means alphabetical order, empty arrays result in empty navigation.
+
+---
+
+## Usage Example
+
+Typical usage in `src/pages/[section]/[...page].astro`:
+
+```ts
+// 1. Generate all paths
+export async function getStaticPaths() {
+  return getDocStaticPaths()
+}
+
+// 2. Build section API
+const api = createSection(section, basePath, contentRoot)
+
+// 3. Resolve or redirect
+const result = resolveOrNext(api, segment)
+if (result.kind === 'redirect') {
+  return Astro.redirect(result.url)
+}
+
+// 4. Get content and navigation
+const Page = api.resolver()(segment)?.default
+const { prev, next } = getPrevNext(result.nav, currentPath)
+```

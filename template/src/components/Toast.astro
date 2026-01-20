@@ -1,0 +1,89 @@
+---
+import { Icon } from 'astro-icon/components'
+---
+
+<div
+  id="toast-container"
+  class="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 opacity-0 pointer-events-none transition-opacity duration-300"
+  data-visible="false"
+>
+  <div class="relative bg-(--sd-bg) border border-(--sd-border) shadow-lg rounded-lg p-6 max-w-md w-full mx-4">
+    <button
+      id="toast-close"
+      class="absolute top-2 right-2 text-(--sd-muted) hover:text-(--sd-fg) transition-colors"
+      aria-label="Close"
+    >
+      <Icon name="mdi:close" class="w-5 h-5" />
+    </button>
+    <div id="toast-content" class="pr-6"></div>
+  </div>
+</div>
+
+<script>
+  interface ToastOptions {
+    message: string
+    duration?: number
+  }
+
+  let hideTimeout: ReturnType<typeof setTimeout> | null = null
+
+  function showToast({ message, duration = 5000 }: ToastOptions) {
+    const container = document.getElementById('toast-container')
+    const content = document.getElementById('toast-content')
+
+    if (!container || !content) return
+
+    // Clear any existing timeout
+    if (hideTimeout) {
+      clearTimeout(hideTimeout)
+      hideTimeout = null
+    }
+
+    content.innerHTML = message
+    container.dataset.visible = 'true'
+    container.classList.remove('opacity-0', 'pointer-events-none')
+    container.classList.add('opacity-100', 'pointer-events-auto')
+
+    // Auto-hide after duration
+    if (duration > 0) {
+      hideTimeout = setTimeout(() => hideToast(), duration)
+    }
+  }
+
+  function hideToast() {
+    const container = document.getElementById('toast-container')
+    if (!container) return
+
+    container.dataset.visible = 'false'
+    container.classList.remove('opacity-100', 'pointer-events-auto')
+    container.classList.add('opacity-0', 'pointer-events-none')
+
+    if (hideTimeout) {
+      clearTimeout(hideTimeout)
+      hideTimeout = null
+    }
+  }
+
+  // Expose globally
+  (window as any).showToast = showToast;
+  (window as any).hideToast = hideToast
+
+  document.addEventListener('astro:page-load', () => {
+    const container = document.getElementById('toast-container')
+    const closeBtn = document.getElementById('toast-close')
+
+    closeBtn?.addEventListener('click', hideToast)
+
+    // Close on backdrop click
+    container?.addEventListener('click', (e) => {
+      if (e.target === container) hideToast()
+    })
+
+    // Close on Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && container?.dataset.visible === 'true') {
+        hideToast()
+      }
+    })
+  })
+</script>

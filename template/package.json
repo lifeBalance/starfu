@@ -1,0 +1,66 @@
+{
+  "name": "just-go-astro",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "dev:template": "STARFU_TITLE=Starfu STARFU_PLATFORM=github STARFU_USERNAME=lifeBalance STARFU_REPO=starfu STARFU_DOCS_ROOT=./docs astro dev",
+    "dev:template:pagefind": "pnpm build:template && pnpm dev:template",
+    "build": "astro build && npm run pagefind",
+    "build:template": "STARFU_TITLE=Starfu STARFU_PLATFORM=github STARFU_USERNAME=lifeBalance STARFU_REPO=starfu STARFU_DOCS_ROOT=./docs astro build && npm run pagefind",
+    "pagefind": "tsx src/lib/docs/build-pagefind.ts",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "exports": {
+    ".": "./src/lib/docs/index.js",
+    "./config": "./src/lib/docs/config.ts",
+    "./integration": "./src/lib/docs/integration.js"
+  },
+  "typesVersions": {
+    "*": {
+      "*": ["."],
+      "integration": ["src/lib/docs/integration"],
+      "config": ["src/lib/docs/config"],
+      "lib/docs": ["src/lib/docs/index"],
+      "index": ["src/lib/docs/index"],
+      "section": ["src/lib/docs/section"],
+      "tocParser": ["src/lib/docs/tocParser"],
+      "defaults": ["src/lib/docs/defaults"]
+    }
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^4.3.12",
+    "hast-util-select": "^6.0.4",
+    "rehype": "^13.0.2",
+    "unist-util-visit": "^5.0.0",
+    "@expressive-code/plugin-collapsible-sections": "^0.41.3",
+    "@iconify-icons/mdi": "^1.2.48",
+    "@tailwindcss/typography": "^0.5.19",
+    "@tailwindcss/vite": "^4.1.17",
+    "astro": "^5.16.0",
+    "astro-expressive-code": "^0.41.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "pagefind": "^1.4.0",
+    "tailwind-merge": "^3.4.0",
+    "tailwindcss": "^4.1.17",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@iconify-json/mdi": "^1.2.3",
+    "@types/hast": "^3.0.4",
+    "astro-icon": "^1.1.5",
+    "prettier-plugin-astro": "^0.14.1"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "trailingComma": "es5",
+    "plugins": [
+      "prettier-plugin-astro"
+    ],
+    "astroAllowShorthand": true
+  }
+}

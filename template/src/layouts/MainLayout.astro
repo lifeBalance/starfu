@@ -1,0 +1,44 @@
+---
+import '@styles/global.css'
+import Header from '@components/Header.astro'
+import Toast from '@components/Toast.astro'
+import { ClientRouter } from 'astro:transitions'
+import favicon from '@assets/logo.svg?url'
+import { docsConfig } from '@lib/docs/config'
+
+const { activeBranch, hideSearch } = Astro.props as { activeBranch?: string; hideSearch?: boolean }
+const base = docsConfig.basePath
+const homeHref = base.endsWith('/') ? base : base + '/'
+const assetPrefix = base.endsWith('/') ? base : `${base}/`
+const defaultBranch = docsConfig.branches[0]?.root.split('/').pop()!
+const resolvedBranch = hideSearch ? undefined : (activeBranch ?? defaultBranch)
+const pagefindBundle = resolvedBranch ? `pagefind-${resolvedBranch}` : ''
+---
+
+<html lang='en'>
+  <head>
+    <meta charset='utf-8' />
+    <meta
+      name='viewport'
+      content='width=device-width'
+    />
+    <link
+      rel='icon'
+      type='image/png'
+      href={favicon}
+    />
+    <title>{docsConfig.title}</title>
+  </head>
+  <body
+    class='min-h-screen bg-sd-bg text-sd-fg'
+    data-pagefind-base={assetPrefix}
+    data-pagefind-bundle={pagefindBundle}
+  >
+    <ClientRouter />
+    <Header hideSearch={hideSearch} />
+    <main class='site-container'>
+      <slot />
+    </main>
+    <Toast />
+  </body>
+</html>

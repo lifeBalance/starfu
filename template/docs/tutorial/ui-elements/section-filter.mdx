@@ -1,0 +1,78 @@
+import Admonition from '@components/Admonition.astro'
+
+# Section Filter
+
+A toggle widget for filtering sidebar groups within a section. Allows users to focus on specific subsections.
+
+> Component: `src/components/sidebar/SectionFilter.astro`
+
+<Admonition type="note">
+This component is currently disabled by default. To enable it, uncomment the `<SectionFilter>` line in `src/components/sidebar/TocSidebar.astro`.
+</Admonition>
+
+## How It Works
+
+The filter shows buttons for each group in the current section's sidebar:
+
+- **All** - Shows all groups (default)
+- **[Group Name]** - Shows only that group, hides others
+
+Selection persists in `localStorage`, so the user's preference is remembered across page loads.
+
+## Usage
+
+The component is already wired into `TocSidebar.astro`. To enable:
+
+```astro
+// In TocSidebar.astro
+<nav aria-label={heading} class="p-4 min-w-[25%] h-full">
+  <SectionFilter groups={groups} />
+  <!-- rest of sidebar -->
+</nav>
+```
+
+Groups are automatically extracted from the `nav` prop:
+
+```ts
+const groups = nav
+  .filter(group => group.items.length > 0)
+  .map(group => ({
+    id: group.label.toLowerCase().replace(/\s+/g, '-'),
+    label: group.label,
+  }))
+```
+
+## Props
+
+| Prop         | Type                              | Description                                      |
+| ------------ | --------------------------------- | ------------------------------------------------ |
+| `groups`     | `{ id: string, label: string }[]` | **Required.** Groups to show as filter buttons.  |
+| `storageKey` | `string`                          | localStorage key for persistence. Default: `sidebar-section-filter` |
+
+## Behavior
+
+- Only renders if there are 2+ groups (no filter needed for single group)
+- Clicking a group button shows only that group
+- Clicking "All" shows everything
+- Emits `section-filter-change` custom event with `{ selected: string }` detail
+
+## Events
+
+Listen for filter changes:
+
+```js
+document.addEventListener('section-filter-change', (e) => {
+  console.log('Filter changed to:', e.detail.selected)
+  // 'all' or the group id
+})
+```
+
+## Styling
+
+The component uses CSS variables for theming:
+
+- `--sd-bg` - Button background
+- `--sd-border` - Button border
+- `--sd-muted` - Default text color
+- `--sd-hover` - Hover background
+- `--sd-accent` - Active button background

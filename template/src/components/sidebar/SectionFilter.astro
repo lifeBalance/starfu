@@ -1,0 +1,110 @@
+---
+/**
+ * SectionFilter - A toggle widget to show/hide sidebar groups within a section
+ *
+ * Props:
+ * - groups: Array of { id: string, label: string } for each filterable group
+ * - storageKey: localStorage key for persisting selection (default: 'sidebar-section-filter')
+ *
+ * Behavior:
+ * - "All" shows all groups
+ * - Clicking a group shows only that group, hides others
+ * - Choice persists in localStorage
+ */
+
+interface Group {
+  id: string
+  label: string
+}
+
+interface Props {
+  groups: Group[]
+  storageKey?: string
+}
+
+const { groups, storageKey = 'sidebar-section-filter' } = Astro.props
+---
+
+{groups.length > 1 && (
+  <div
+    class="section-filter mb-4 p-2 border border-(--sd-border) rounded bg-(--sd-bg)"
+    data-storage-key={storageKey}
+  >
+    <div class="flex flex-col gap-1">
+      <button
+        type="button"
+        data-filter="all"
+        class="filter-btn px-2 py-1 text-xs text-left rounded border border-(--sd-border) transition-colors cursor-pointer"
+      >
+        All
+      </button>
+      {groups.map((group) => (
+        <button
+          type="button"
+          data-filter={group.id}
+          class="filter-btn px-2 py-1 text-xs text-left rounded border border-(--sd-border) transition-colors cursor-pointer"
+        >
+          {group.label}
+        </button>
+      ))}
+    </div>
+  </div>
+)}
+
+<style>
+  .filter-btn {
+    background: var(--sd-bg);
+    color: var(--sd-muted);
+  }
+  .filter-btn:hover {
+    background: var(--sd-hover);
+    color: var(--sd-fg);
+  }
+  .filter-btn.active {
+    background: var(--sd-accent);
+    color: var(--sd-bg);
+    border-color: var(--sd-accent);
+  }
+</style>
+
+<script>
+  function initSectionFilter() {
+    const container = document.querySelector('.section-filter') as HTMLElement
+    if (!container) return
+
+    const storageKey = container.dataset.storageKey || 'sidebar-section-filter'
+    const buttons = container.querySelectorAll('.filter-btn') as NodeListOf<HTMLButtonElement>
+
+    // Get saved selection or default to 'all'
+    const saved = localStorage.getItem(storageKey) || 'all'
+
+    function setActive(selected: string) {
+      buttons.forEach(btn => {
+        const isActive = btn.dataset.filter === selected
+        btn.classList.toggle('active', isActive)
+      })
+
+      // Save to localStorage
+      localStorage.setItem(storageKey, selected)
+
+      // Dispatch custom event for integration
+      container.dispatchEvent(new CustomEvent('section-filter-change', {
+        bubbles: true,
+        detail: { selected }
+      }))
+    }
+
+    // Set initial state
+    setActive(saved)
+
+    // Handle clicks
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const filter = btn.dataset.filter
+        if (filter) setActive(filter)
+      })
+    })
+  }
+
+  document.addEventListener('astro:page-load', initSectionFilter)
+</script>

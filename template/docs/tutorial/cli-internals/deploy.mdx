@@ -1,0 +1,124 @@
+import Admonition from '@components/Admonition.astro'
+
+# Deploy Command
+
+The `deploy` command helps configure your Starfu project for deployment.
+
+```bash
+npx starfu deploy
+```
+
+## What It Does
+
+1. **Detects your repository** from git remote (or prompts for manual config)
+2. **Offers deployment options**: CI workflow or manual push
+3. **Configures and deploys** based on your choice
+
+## Deployment Flow
+
+### With Git Remote
+
+```sh
+┌  Starfu Deploy
+│
+◇  Detected: github.com/username/my-docs
+│
+◆  How do you want to deploy?
+│  ○ Generate CI workflow (recommended)
+│  ○ Deploy manually (push to branch)
+```
+
+### Without Git Remote
+
+If no remote is detected, you can configure manually:
+
+```sh
+┌  Starfu Deploy
+│
+▲  No git remote detected.
+   Push your repository to GitHub or GitLab first, then run this again.
+│
+◆  Configure deployment settings manually?
+│  ○ Yes  ● No
+```
+
+If you choose yes, it prompts for platform, username, and repo, then updates your `astro.config.mjs` with the values.
+
+## Deployment Options
+
+### Generate CI Workflow (Recommended)
+
+Creates a workflow file that automatically builds and deploys on push to `main`:
+
+- **GitHub**: `.github/workflows/deploy.yml`
+- **GitLab**: `.gitlab-ci.yml`
+
+After generating, enable Pages in your repo settings.
+
+### Deploy Manually
+
+Builds and pushes directly to a branch:
+
+```sh
+◆  Branch to deploy to:
+│  gh-pages
+
+◆  Folder in branch:
+│  /
+
+◇  Building site
+◇  Pushed to gh-pages:/ (root)!
+│
+◆  Site URL: https://username.github.io/my-docs/
+◆  Branch: gh-pages
+◆  Folder: / (root)
+│
+└  Deployed!
+```
+
+You can customize the branch (e.g., `main`, `gh-pages`) and folder (e.g., `/`, `docs`).
+
+After deploying, configure GitHub/GitLab Pages to serve from that branch and folder.
+
+## Site and Base Configuration
+
+Astro needs two settings for deployment:
+
+- **site**: Full URL where your docs will live (e.g., `https://username.github.io/repo/`)
+- **base**: Base path for all routes (e.g., `/repo/`)
+
+Starfu sets these automatically based on detected repository info:
+
+```js
+// Auto-generated in astro.config.mjs
+site: 'https://username.github.io/repo/',
+base: '/repo/',
+```
+
+## Jekyll and .nojekyll
+
+GitHub Pages uses Jekyll by default, which ignores folders starting with `_` (like `_astro`). Starfu automatically adds a `.nojekyll` file to disable Jekyll processing.
+
+<Admonition variant="tip">
+  If your CSS/JS files return 404 on GitHub Pages, make sure `.nojekyll` exists in your deployed branch.
+</Admonition>
+
+## Environment Variables
+
+Override settings with environment variables:
+
+```bash
+STARFU_PLATFORM=github \
+STARFU_USERNAME=myorg \
+STARFU_REPO=docs \
+pnpm build
+```
+
+| Variable | Description |
+|----------|-------------|
+| `STARFU_TITLE` | Site title |
+| `STARFU_PLATFORM` | `github` or `gitlab` |
+| `STARFU_USERNAME` | Username or organization |
+| `STARFU_REPO` | Repository name |
+| `STARFU_DOCS_ROOT` | Path to docs folder |
+| `STARFU_OUT_DIR` | Build output directory |
