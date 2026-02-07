@@ -147,3 +147,4 @@ pagefind
 pagefind-*
 # Temp folders for scaffolding using -dir
 tmp
+.claude
