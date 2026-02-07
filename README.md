@@ -41,7 +41,7 @@ That's it. You'll be guided through:
 └  Starting dev server...
 ```
 
-## 📦 Minimal Footprint
+## 🐾 Minimal Footprint
 
 Starfu adds exactly two folders to your project:
 
@@ -56,7 +56,7 @@ your-project/
 > [!NOTE]
 > If you didn't have a `git` repo initialized, `repo-name` will be the `project-folder`.
 
-## 🔧 Local Development
+## 🧑‍💻 Local Development
 
 Start the development server:
 ```sh
@@ -135,6 +135,6 @@ docsIntegration({
 - Node.js 18+
 - pnpm, npm, or yarn
 
-## 📄 License
+## 🪪 License
 
 MIT

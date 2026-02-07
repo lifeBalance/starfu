@@ -5,7 +5,7 @@
   { "src": "src/", "dest": ".starfu/src/" },
   { "src": "tsconfig.json", "dest": ".starfu/tsconfig.json" },
   { "src": "docs-registry.ts", "dest": ".starfu/docs-registry.ts" },
-  { "src": ".gitignore", "dest": ".starfu/.gitignore" },
+  { "src": "gitignore", "dest": ".starfu/.gitignore" },
   { "src": "public/", "dest": ".starfu/public/" },
   { "src": "docs/", "dest": "docs/" }
 ]
