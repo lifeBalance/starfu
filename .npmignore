@@ -1,0 +1,4 @@
+template/node_modules/
+template/pnpm-lock.yaml
+template/.astro/
+template/dist/
