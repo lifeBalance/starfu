@@ -1,6 +1,6 @@
 {
   "name": "starfu",
-  "version": "1.0.5",
+  "version": "1.0.3",
   "type": "module",
   "bin": {
     "starfu": "./dist/cli.js"
