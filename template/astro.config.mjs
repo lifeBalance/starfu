@@ -48,6 +48,11 @@ export default defineConfig({
     icons(),
     docsIntegration({
       title: starfuConfig.title,
+      repo: {
+        platform: starfuConfig.platform,
+        username: starfuConfig.username,
+        name: starfuConfig.repo,
+      },
       sections: [
         {
           root: `${starfuConfig.docsRoot}/tutorial`,

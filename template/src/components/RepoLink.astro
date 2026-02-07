@@ -1,9 +1,10 @@
 ---
 import { Icon } from 'astro-icon/components'
+import { docsConfig } from '@lib/docs/config'
 
-const platform = import.meta.env.STARFU_PLATFORM || 'github'
-const username = import.meta.env.STARFU_USERNAME || ''
-const repo = import.meta.env.STARFU_REPO || ''
+const platform = docsConfig.repo?.platform || 'github'
+const username = docsConfig.repo?.username || ''
+const repo = docsConfig.repo?.name || ''
 const domain = platform === 'gitlab' ? 'gitlab.com' : 'github.com'
 const repoUrl = username && repo ? `https://${domain}/${username}/${repo}` : ''
 const repoIcon = platform === 'gitlab' ? 'mdi:gitlab' : 'mdi:github'

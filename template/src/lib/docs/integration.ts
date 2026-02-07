@@ -9,10 +9,17 @@ type DocsSection = {
   href?: string
 }
 
+type DocsRepo = {
+  platform?: string
+  username?: string
+  name?: string
+}
+
 type DocsIntegrationOptions = {
   basePath?: string
   sections?: DocsSection[]
   title?: string
+  repo?: DocsRepo
 }
 
 const MODULE_ID = 'virtual:docs-config'
@@ -35,9 +42,10 @@ function normalizeSections(sections?: DocsSection[]): DocsSection[] {
 }
 
 // Virtual module only contains config, NOT globs
-function createDocsVirtualModule(sections: DocsSection[], basePath?: string, title?: string) {
+function createDocsVirtualModule(sections: DocsSection[], basePath?: string, title?: string, repo?: DocsRepo) {
   const baseExpr = basePath === undefined ? 'undefined' : JSON.stringify(basePath)
   const titleExpr = title === undefined ? 'undefined' : JSON.stringify(title)
+  const repoExpr = repo === undefined ? 'undefined' : JSON.stringify(repo)
   const sectionsWithId = sections.map(s => ({ ...s, id: s.root.split('/').pop()! }))
   const sectionsJson = JSON.stringify(sectionsWithId, null, 2)
 
@@ -54,6 +62,7 @@ function createDocsVirtualModule(sections: DocsSection[], basePath?: string, tit
       return `export const docsConfig = {
   basePath: ${baseExpr},
   title: ${titleExpr},
+  repo: ${repoExpr},
   branches: ${sectionsJson}
 };
 `
@@ -138,7 +147,7 @@ export default function docsIntegration(options: DocsIntegrationOptions = {}): A
               },
             },
             plugins: [
-              createDocsVirtualModule(sections, options.basePath, options.title),
+              createDocsVirtualModule(sections, options.basePath, options.title, options.repo),
               createDocsResolverPlugin(projectRoot),
             ],
           },

@@ -15,10 +15,17 @@ const fallbackBranches: DocsBranch[] = [
   { root: '/docs', title: 'Docs', subtitle: '', href: '/docs' },
 ]
 
+type DocsRepo = {
+  platform?: string
+  username?: string
+  name?: string
+}
+
 type DocsConfigModule = {
   basePath?: string
   branches?: DocsBranch[]
   title?: string
+  repo?: DocsRepo
 }
 
 let resolvedConfig: DocsConfigModule = {}
@@ -87,6 +94,7 @@ const fallbackRegistry: GlobRegistry = {
 export const docsConfig = {
   basePath: normalizeBasePath(resolvedConfig?.basePath),
   title: resolvedConfig?.title,
+  repo: resolvedConfig?.repo as DocsRepo | undefined,
   branches: ((resolvedConfig?.branches as DocsBranch[] | undefined) ?? fallbackConfig.branches).map((branch) => ({
     ...branch,
     id: branch.id ?? branch.root.split('/').pop()!,
