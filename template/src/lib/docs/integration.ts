@@ -61,6 +61,33 @@ function createDocsVirtualModule(sections: DocsSection[], basePath?: string, tit
   }
 }
 
+// Resolve bare imports (e.g. "astro-expressive-code/components") from docs files
+// outside .starfu/ against .starfu/node_modules/
+function createDocsResolverPlugin(projectRoot: string) {
+  return {
+    name: 'docs-resolve-deps',
+    enforce: 'pre' as const,
+    async resolveId(source: string, importer: string | undefined) {
+      if (
+        !importer ||
+        !source ||
+        source.startsWith('.') ||
+        source.startsWith('/') ||
+        source.startsWith('\0') ||
+        source.startsWith('virtual:') ||
+        source.startsWith('node:') ||
+        importer.startsWith(projectRoot)
+      ) {
+        return null
+      }
+      // Re-resolve as if the import came from inside the project root
+      return this.resolve(source, path.join(projectRoot, '_docs_resolve_.ts'), {
+        skipSelf: true,
+      })
+    },
+  }
+}
+
 // Generate a real file with globs at project root (so relative paths work correctly)
 function generateRegistryFile(projectRoot: string, sections: DocsSection[]) {
   const sectionsWithId = sections.map(s => ({ ...s, id: s.root.split('/').pop()! }))
@@ -110,7 +137,10 @@ export default function docsIntegration(options: DocsIntegrationOptions = {}): A
                 allow: [projectRoot, ...docsRoots],
               },
             },
-            plugins: [createDocsVirtualModule(sections, options.basePath, options.title)],
+            plugins: [
+              createDocsVirtualModule(sections, options.basePath, options.title),
+              createDocsResolverPlugin(projectRoot),
+            ],
           },
         })
       },

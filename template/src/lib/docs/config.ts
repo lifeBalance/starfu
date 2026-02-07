@@ -36,6 +36,7 @@ try {
   const registry = await import('/docs-registry')
   generatedRegistry = (registry as any).generatedRegistry
 } catch (err) {
+  console.error('[docs] Failed to load docs-registry:', err)
   generatedRegistry = undefined
 }
 
