@@ -48,12 +48,31 @@ If you choose yes, it prompts for platform, username, and repo, then updates you
 
 ### Generate CI Workflow (Recommended)
 
-Creates a workflow file that automatically builds and deploys on push to `main`:
+Creates a workflow file that automatically builds and deploys on push to your default branch:
 
 - **GitHub**: `.github/workflows/deploy.yml`
 - **GitLab**: `.gitlab-ci.yml`
 
 After generating, enable Pages in your repo settings.
+
+#### Workflow Templates
+
+The workflow files are generated from YAML templates in `template/workflows/`:
+
+- `github-deploy.yml` — GitHub Actions workflow
+- `gitlab-ci.yml` — GitLab CI pipeline
+
+These templates use `%%PLACEHOLDER%%` syntax (same pattern used elsewhere in Starfu's scaffolding). When you run `starfu deploy`, placeholders like `%%DEFAULT_BRANCH%%`, `%%USERNAME%%`, and `%%REPO%%` are replaced with your actual values before writing the final workflow file.
+
+#### Default Branch Detection
+
+The deploy command automatically detects your default branch instead of assuming `main`. It checks in order:
+
+1. `git symbolic-ref refs/remotes/origin/HEAD` — the branch your remote considers default
+2. `git branch --show-current` — your current local branch
+3. Falls back to `main` if neither works
+
+This means the generated workflow will use `master`, `develop`, or whatever your repo's default branch actually is.
 
 ### Deploy Manually
 

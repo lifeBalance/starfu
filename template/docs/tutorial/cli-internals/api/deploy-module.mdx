@@ -61,27 +61,52 @@ git@gitlab.com:username/repo.git     → { platform: 'gitlab', username, repo }
 https://gitlab.com/username/repo.git → { platform: 'gitlab', username, repo }
 ```
 
-## Generated Workflows
+## detectDefaultBranch
 
-### GITHUB_WORKFLOW
+Detects the default branch for the repository.
 
-GitHub Actions workflow template for deploying to GitHub Pages.
+```ts
+function detectDefaultBranch(cwd: string): string
+```
 
-Features:
-- Triggers on push to `main` and manual dispatch
-- Uses pnpm for package management
-- Uploads build artifact
-- Deploys via `actions/deploy-pages`
+### Parameters
 
-### GITLAB_CI
+| Parameter | Description |
+|-----------|-------------|
+| `cwd` | Directory to run git commands in |
 
-GitLab CI template for deploying to GitLab Pages.
+### Returns
 
-Features:
-- Node 20 image
-- pnpm for package management
-- Caches `node_modules`
-- Standard `pages` job for GitLab Pages
+The branch name as a string. Detection order:
+
+1. Remote HEAD (`git symbolic-ref refs/remotes/origin/HEAD`)
+2. Current branch (`git branch --show-current`)
+3. Fallback: `"main"`
+
+## readWorkflowTemplate
+
+Reads a CI workflow template from the package's `template/workflows/` directory.
+
+```ts
+function readWorkflowTemplate(platform: Platform): string
+```
+
+### Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `platform` | `'github'` or `'gitlab'` |
+
+### Returns
+
+The raw template string with `%%PLACEHOLDER%%` tokens. The caller replaces `%%DEFAULT_BRANCH%%`, `%%USERNAME%%`, and `%%REPO%%` before writing the file.
+
+### Template Files
+
+| Platform | Template |
+|----------|----------|
+| GitHub | `template/workflows/github-deploy.yml` |
+| GitLab | `template/workflows/gitlab-ci.yml` |
 
 ## Dependencies
 

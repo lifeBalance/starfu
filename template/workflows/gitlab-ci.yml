@@ -1,0 +1,30 @@
+image: node:20
+
+stages:
+  - build
+  - deploy
+
+cache:
+  paths:
+    - .starfu/node_modules/
+
+build:
+  stage: build
+  before_script:
+    - npm install -g pnpm
+    - cd .starfu && pnpm install
+  script:
+    - cd .starfu && pnpm build
+  artifacts:
+    paths:
+      - .starfu/dist
+
+pages:
+  stage: deploy
+  script:
+    - mv .starfu/dist public
+  artifacts:
+    paths:
+      - public
+  only:
+    - %%DEFAULT_BRANCH%%

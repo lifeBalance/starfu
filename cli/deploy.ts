@@ -5,6 +5,44 @@ import * as p from '@clack/prompts'
 
 type Platform = 'github' | 'gitlab'
 
+function getTemplateDir(): string {
+  const cliDir = path.dirname(new URL(import.meta.url).pathname)
+  return path.join(cliDir, '..', 'template')
+}
+
+function detectDefaultBranch(cwd: string): string {
+  try {
+    const ref = execSync('git symbolic-ref refs/remotes/origin/HEAD', {
+      cwd,
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'ignore']
+    }).trim()
+    const branch = ref.replace('refs/remotes/origin/', '')
+    if (branch) return branch
+  } catch {
+    // no remote HEAD set
+  }
+
+  try {
+    const branch = execSync('git branch --show-current', {
+      cwd,
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'ignore']
+    }).trim()
+    if (branch) return branch
+  } catch {
+    // not in a git repo or no branch
+  }
+
+  return 'main'
+}
+
+function readWorkflowTemplate(platform: Platform): string {
+  const templateDir = getTemplateDir()
+  const filename = platform === 'github' ? 'github-deploy.yml' : 'gitlab-ci.yml'
+  return readFileSync(path.join(templateDir, 'workflows', filename), 'utf8')
+}
+
 interface RepoInfo {
   platform: Platform
   username: string
@@ -34,98 +72,6 @@ function detectRepoInfo(cwd: string): RepoInfo | null {
     return null
   }
 }
-
-const GITHUB_WORKFLOW = `name: Deploy to GitHub Pages
-
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-          cache-dependency-path: .starfu/pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install
-        working-directory: .starfu
-
-      - name: Build
-        run: pnpm build
-        working-directory: .starfu
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: .starfu/dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: \${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-`
-
-const GITLAB_CI = `image: node:20
-
-stages:
-  - build
-  - deploy
-
-cache:
-  paths:
-    - .starfu/node_modules/
-
-build:
-  stage: build
-  before_script:
-    - npm install -g pnpm
-    - cd .starfu && pnpm install
-  script:
-    - cd .starfu && pnpm build
-  artifacts:
-    paths:
-      - .starfu/dist
-
-pages:
-  stage: deploy
-  script:
-    - mv .starfu/dist public
-  artifacts:
-    paths:
-      - public
-  only:
-    - main
-`
 
 export async function runDeploy(cwd: string) {
   p.intro('Starfu Deploy')
@@ -280,15 +226,20 @@ export async function runDeploy(cwd: string) {
       ? path.join(cwd, '.github', 'workflows', 'deploy.yml')
       : path.join(cwd, '.gitlab-ci.yml')
 
+    const detectedBranch = detectDefaultBranch(cwd)
+
     if (existsSync(workflowPath)) {
       p.log.success(`CI workflow already exists: ${path.relative(cwd, workflowPath)}`)
     } else {
+      let workflow = readWorkflowTemplate(finalRepoInfo.platform)
+      workflow = workflow.replace(/%%DEFAULT_BRANCH%%/g, detectedBranch)
+      workflow = workflow.replace(/%%USERNAME%%/g, finalRepoInfo.username)
+      workflow = workflow.replace(/%%REPO%%/g, finalRepoInfo.repo)
+
       if (finalRepoInfo.platform === 'github') {
         mkdirSync(path.dirname(workflowPath), { recursive: true })
-        writeFileSync(workflowPath, GITHUB_WORKFLOW)
-      } else {
-        writeFileSync(workflowPath, GITLAB_CI)
       }
+      writeFileSync(workflowPath, workflow)
       p.log.success(`Created ${path.relative(cwd, workflowPath)}`)
     }
 
@@ -303,7 +254,7 @@ export async function runDeploy(cwd: string) {
       p.log.step('Under Source, select "GitHub Actions"')
     }
 
-    p.outro('Push to main to trigger the workflow.')
+    p.outro(`Push to ${detectedBranch} to trigger the workflow.`)
   } else {
     // Deploy manually - push to branch
     const starfuDir = path.join(cwd, '.starfu')
