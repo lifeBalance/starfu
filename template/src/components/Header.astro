@@ -2,6 +2,7 @@
 import ThemeToggle from '@components/ThemeToggle.astro'
 import PageFind from '@components/PageFind.astro'
 import RepoLink from '@components/RepoLink.astro'
+import { Icon } from 'astro-icon/components'
 import { docsConfig } from '@lib/docs/config'
 import logo from '@assets/logo.svg?url'
 
@@ -36,9 +37,9 @@ const hidden = Astro.props?.hideSearch === true
       {hidden ? null : <PageFind />}
       <a
         href={`${base}/colors`}
-        class="text-sm no-underline text-(--sd-muted) hover:text-(--sd-accent)"
-        >Colors</a
-      >
+        class="text-(--sd-muted) hover:text-(--sd-accent) transition-colors"
+        title="Theme Editor"
+      ><Icon name="mdi:palette-outline" class="text-2xl" /></a>
       <ThemeToggle />
       <RepoLink />
     </div>

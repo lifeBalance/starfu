@@ -1,0 +1,62 @@
+import Admonition from '@components/Admonition.astro'
+
+# Theming
+
+Starfu ships with a built-in Theme Editor that lets you customize your site's color palette visually.
+
+## Using the Theme Editor
+
+Click the palette icon in the header (or navigate to `/colors`) to open the editor. You'll see six color swatches — one for each design token:
+
+| Token | Purpose |
+|-------|---------|
+| `--sd-bg` | Page background |
+| `--sd-fg` | Primary text |
+| `--sd-muted` | Secondary text, labels |
+| `--sd-accent` | Links, highlights |
+| `--sd-border` | Borders, dividers |
+| `--sd-hover` | Hover backgrounds |
+
+Click any swatch to open a color picker. Changes apply instantly so you can see how the palette looks across the page.
+
+Use the theme toggle in the header to switch between light and dark mode — each has its own set of colors.
+
+## Applying Your Theme
+
+Once you're happy with the colors:
+
+1. Copy the generated CSS from the output panel
+2. Paste it into `.starfu/src/styles/palette.css`, replacing the existing content
+3. Restart the dev server to see the changes
+
+<Admonition variant="tip">
+  The `palette.css` file is the single source of truth for your color palette. It contains the `@theme` block (light defaults) and the `[data-theme='dark']` overrides.
+</Admonition>
+
+## Palette File Structure
+
+The palette file has two sections:
+
+```css
+/* Light theme (default) */
+@theme {
+  --color-sd-bg:     #e4e1ed;
+  --color-sd-fg:     #3b3554;
+  --color-sd-muted:  #504a66;
+  /* ... */
+}
+
+/* Dark theme */
+[data-theme='dark'] {
+  --color-sd-bg:     #38352d;
+  --color-sd-fg:     #fafaf9;
+  --color-sd-muted:  #b5b0a6;
+  /* ... */
+}
+```
+
+The `@theme` block registers Tailwind v4 color tokens, making utility classes like `bg-sd-bg` and `text-sd-accent` available. The `[data-theme='dark']` block overrides those tokens when dark mode is active.
+
+## Reset
+
+Click "Reset to defaults" in the Theme Editor to restore the original palette for the current theme (light or dark).
