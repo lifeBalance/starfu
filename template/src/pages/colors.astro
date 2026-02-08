@@ -3,41 +3,218 @@ import MainLayout from '@layouts/MainLayout.astro'
 const vars = ['--sd-bg','--sd-fg','--sd-muted','--sd-accent','--sd-border','--sd-hover']
 ---
 <MainLayout>
-  <section class="min-h-[calc(100vh-var(--topbar-height))] flex flex-col items-center justify-center">
-    <h1 class="text-2xl mb-2">Color Tokens</h1>
-    <p class="text-sm text-(--sd-muted)">Theme: <span data-theme-label>light</span></p>
+  <section class="min-h-[calc(100vh-var(--topbar-height))] flex flex-col items-center justify-center py-8">
+    <h1 class="text-2xl mb-2">Theme Editor</h1>
+    <p class="text-sm text-(--sd-muted) mb-1">
+      Editing: <span data-theme-label class="font-medium text-(--sd-fg)">light</span> theme
+    </p>
+    <button
+      data-reset
+      class="text-xs px-3 py-1 rounded border border-(--sd-border) hover:border-(--sd-accent) hover:text-(--sd-accent) cursor-pointer mb-4"
+    >Reset to defaults</button>
 
-    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-2xl">
       {vars.map((v) => (
-        <div class="rounded-md border border-(--sd-border)">
-          <div class="h-16 rounded-t-md" style={`background: var(${v})`}></div>
-          <div class="p-2 text-sm">
-            <div><code>{v}</code></div>
-            <div class="text-(--sd-muted)" data-var={v}></div>
+        <label class="rounded-md border border-(--sd-border) cursor-pointer group relative overflow-hidden">
+          <div class="h-16 rounded-t-md relative" data-swatch={v} style={`background: var(${v})`}>
+            <input
+              type="color"
+              data-picker={v}
+              class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            />
           </div>
-        </div>
+          <div class="p-2 text-sm flex items-center justify-between">
+            <div>
+              <div><code>{v}</code></div>
+              <div class="text-(--sd-muted)" data-var={v}></div>
+            </div>
+          </div>
+        </label>
       ))}
     </div>
-    <script>
-      const VARS = ['--sd-bg','--sd-fg','--sd-muted','--sd-accent','--sd-border','--sd-hover']
-      const refresh = () => {
-        try {
-          const style = getComputedStyle(document.documentElement)
-          for (const v of VARS) {
-            const el = document.querySelector(`[data-var="${v}"]`)
-            if (!el) continue
-            const val = style.getPropertyValue(v).trim()
-            el.textContent = val
-          }
-          const th = document.querySelector('[data-theme-label]')
-          if (th) th.textContent = document.documentElement.getAttribute('data-theme') || 'light'
-        } catch {}
-      }
-      document.addEventListener('DOMContentLoaded', () => {
-        refresh()
-        const obs = new MutationObserver(refresh)
-        obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
-      })
-    </script>
+
+    <div class="mt-8 w-full max-w-2xl">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-lg">Generated CSS</h2>
+        <button
+          data-copy
+          class="text-xs px-3 py-1 rounded border border-(--sd-border) hover:border-(--sd-accent) hover:text-(--sd-accent) cursor-pointer"
+        >Copy</button>
+      </div>
+      <p class="text-sm text-(--sd-muted) mb-2">Paste this into <code>.starfu/src/styles/palette.css</code></p>
+      <pre class="rounded-md border border-(--sd-border) bg-(--sd-hover) p-4 text-sm overflow-x-auto"><code data-output></code></pre>
+    </div>
   </section>
+
+  <script>
+    const VARS = ['--sd-bg','--sd-fg','--sd-muted','--sd-accent','--sd-border','--sd-hover']
+
+    // State: user-picked colors for each theme
+    const lightColors: Record<string, string> = {}
+    const darkColors: Record<string, string> = {}
+    // Track which vars the user has explicitly changed
+    const lightDirty = new Set<string>()
+    const darkDirty = new Set<string>()
+
+    function isDark() {
+      return document.documentElement.getAttribute('data-theme') === 'dark'
+    }
+
+    function activeMap() { return isDark() ? darkColors : lightColors }
+    function activeDirty() { return isDark() ? darkDirty : lightDirty }
+
+    // Convert any CSS color to hex via the browser's canvas
+    function toHex(color: string): string {
+      const ctx = document.createElement('canvas').getContext('2d')!
+      ctx.fillStyle = color
+      return ctx.fillStyle // returns #rrggbb
+    }
+
+    // Read defaults from computed styles (strips inline overrides first for a clean read)
+    function readDefaults(): Record<string, string> {
+      const result: Record<string, string> = {}
+      // Temporarily remove inline overrides to read the stylesheet defaults
+      const saved: [string, string][] = []
+      for (const v of VARS) {
+        const inline = document.documentElement.style.getPropertyValue(v)
+        if (inline) {
+          saved.push([v, inline])
+          document.documentElement.style.removeProperty(v)
+        }
+      }
+      const style = getComputedStyle(document.documentElement)
+      for (const v of VARS) {
+        result[v] = toHex(style.getPropertyValue(v).trim())
+      }
+      // Restore inline overrides
+      for (const [v, val] of saved) {
+        document.documentElement.style.setProperty(v, val)
+      }
+      return result
+    }
+
+    function initColors() {
+      const defaults = readDefaults()
+      const map = activeMap()
+      const dirty = activeDirty()
+      for (const v of VARS) {
+        if (!dirty.has(v)) {
+          map[v] = defaults[v]
+        }
+      }
+    }
+
+    function applyColors() {
+      const map = activeMap()
+      for (const v of VARS) {
+        if (map[v]) {
+          document.documentElement.style.setProperty(v, map[v])
+        }
+      }
+      updateUI()
+      renderOutput()
+    }
+
+    function updateUI() {
+      const map = activeMap()
+      for (const v of VARS) {
+        const picker = document.querySelector<HTMLInputElement>(`[data-picker="${v}"]`)
+        const swatch = document.querySelector<HTMLElement>(`[data-swatch="${v}"]`)
+        const label = document.querySelector(`[data-var="${v}"]`)
+        if (picker && map[v]) picker.value = map[v]
+        if (swatch && map[v]) swatch.style.background = map[v]
+        if (label && map[v]) label.textContent = map[v]
+      }
+      const th = document.querySelector('[data-theme-label]')
+      if (th) th.textContent = isDark() ? 'dark' : 'light'
+    }
+
+    function renderOutput() {
+      const el = document.querySelector('[data-output]')
+      if (!el) return
+
+      const pad = (s: string) => s.padEnd(18)
+      let css = '@theme {\n'
+      for (const v of VARS) {
+        const name = v.replace('--sd-', '--color-sd-')
+        css += `  ${pad(name + ':')} ${lightColors[v] || '#000000'};\n`
+      }
+      css += '}\n\n'
+      css += "/* Dark theme overrides */\n"
+      css += "[data-theme='dark'] {\n"
+      for (const v of VARS) {
+        const name = v.replace('--sd-', '--color-sd-')
+        css += `  ${pad(name + ':')} ${darkColors[v] || '#000000'};\n`
+      }
+      css += '}'
+
+      el.textContent = css
+    }
+
+    function resetAll() {
+      const dirty = activeDirty()
+      const map = activeMap()
+      dirty.clear()
+      // Remove inline overrides so we can read stylesheet defaults
+      for (const v of VARS) {
+        document.documentElement.style.removeProperty(v)
+      }
+      const defaults = readDefaults()
+      for (const v of VARS) {
+        map[v] = defaults[v]
+      }
+      applyColors()
+    }
+
+    function setup() {
+      // Init both themes
+      initColors()
+      applyColors()
+
+      // Bind pickers
+      for (const v of VARS) {
+        const picker = document.querySelector<HTMLInputElement>(`[data-picker="${v}"]`)
+        if (!picker) continue
+        picker.addEventListener('input', () => {
+          const map = activeMap()
+          const dirty = activeDirty()
+          map[v] = picker.value
+          dirty.add(v)
+          document.documentElement.style.setProperty(v, picker.value)
+          const swatch = document.querySelector<HTMLElement>(`[data-swatch="${v}"]`)
+          if (swatch) swatch.style.background = picker.value
+          const label = document.querySelector(`[data-var="${v}"]`)
+          if (label) label.textContent = picker.value
+          renderOutput()
+        })
+      }
+
+      // Copy button
+      const copyBtn = document.querySelector('[data-copy]')
+      if (copyBtn) {
+        copyBtn.addEventListener('click', async () => {
+          const code = document.querySelector('[data-output]')?.textContent || ''
+          await navigator.clipboard.writeText(code)
+          const prev = copyBtn.textContent
+          copyBtn.textContent = 'Copied!'
+          setTimeout(() => { copyBtn.textContent = prev }, 1500)
+        })
+      }
+
+      // Reset button
+      const resetBtn = document.querySelector('[data-reset]')
+      if (resetBtn) {
+        resetBtn.addEventListener('click', resetAll)
+      }
+
+      // Theme change observer
+      const obs = new MutationObserver(() => {
+        initColors()
+        applyColors()
+      })
+      obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+    }
+
+    document.addEventListener('astro:page-load', setup)
+  </script>
 </MainLayout>

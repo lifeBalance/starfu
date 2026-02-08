@@ -1,29 +1,6 @@
 @import 'tailwindcss';
+@import './palette.css';
 @plugin '@tailwindcss/typography';
-
-/* Tailwind v4 theme tokens for IntelliSense-friendly classes */
-@theme {
-  --color-sd-bg: oklch(0.91 0.01 262);
-  --color-sd-fg: lch(32 11.15 284.8);
-  --color-sd-muted: lch(42 11.3 282.59);
-  --color-sd-accent: #f471b7;
-  --color-sd-border: lch(78 7.69 271.97);
-  --color-sd-hover: oklch(0.93 0.01 0);
-  --color-admonition-note: var(--color-blue-500);
-  --color-admonition-tip: var(--color-emerald-500);
-  --color-admonition-warning: var(--color-amber-500);
-  --color-admonition-error: var(--color-red-500);
-}
-
-/* Dark theme overrides */
-[data-theme='dark'] {
-  --color-sd-bg: oklch(0.216 0.006 56.043); /* stone-900 */
-  --color-sd-fg: oklch(0.985 0.001 106.423); /* stone-50 */
-  --color-sd-muted: oklch(0.709 0.01 56.259); /* stone-400 */
-  --color-sd-accent: #65d6e7;
-  --color-sd-border: oklch(0.374 0.01 67.558); /* stone-700 */
-  --color-sd-hover: oklch(0.268 0.007 34.298); /* stone-800 */
-}
 
 /* Maintain legacy CSS variables for runtime reads (e.g., /colors page) */
 :root {
