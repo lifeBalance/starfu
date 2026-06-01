@@ -59,6 +59,7 @@ const currentPath = `${basePrefix}/${section}` + (currentSegment ? `/${currentSe
 const resolve = sectionApi.resolver()
 const mod = resolve(currentSegment) as any
 const Page = mod?.default
+const headings = Page ? await mod.getHeadings?.() : []
 
 // Compute prev/next links based on the flattened, ordered nav structure
 const { prev, next } = getPrevNext(nav, currentPath)
@@ -116,7 +117,7 @@ const { prev, next } = getPrevNext(nav, currentPath)
       style="top: 4rem; height: calc(100vh - 4rem);"
     >
       <div class="p-4">
-        <DocsToc />
+        <DocsToc {headings} />
       </div>
     </aside>
   </div>
