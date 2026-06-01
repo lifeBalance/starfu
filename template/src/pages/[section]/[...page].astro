@@ -82,7 +82,7 @@ const { prev, next } = getPrevNext(nav, currentPath)
       <div class="py-4">
         <Breadcrumb path={currentPath} {nav} />
       </div>
-      <div id="content" class="prose">
+      <div id="content" class="prose" data-pagefind-body>
         {
           Page ? (
             <Page />

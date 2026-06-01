@@ -13,6 +13,7 @@ const assetPrefix = base.endsWith('/') ? base : `${base}/`
 const defaultBranch = docsConfig.branches[0]?.root.split('/').pop()!
 const resolvedBranch = hideSearch ? undefined : (activeBranch ?? defaultBranch)
 const pagefindBundle = resolvedBranch ? `pagefind-${resolvedBranch}` : ''
+const pagefindPath = pagefindBundle ? `${assetPrefix}${pagefindBundle}/` : ''
 ---
 
 <html lang='en'>
@@ -28,14 +29,23 @@ const pagefindBundle = resolvedBranch ? `pagefind-${resolvedBranch}` : ''
       href={favicon}
     />
     <title>{docsConfig.title}</title>
+    {
+      pagefindPath && (
+        <>
+          <link href={`${pagefindPath}pagefind-component-ui.css`} rel="stylesheet" />
+          <script src={`${pagefindPath}pagefind-component-ui.js`} type="module"></script>
+        </>
+      )
+    }
   </head>
-  <body
-    class='min-h-screen bg-sd-bg text-sd-fg'
-    data-pagefind-base={assetPrefix}
-    data-pagefind-bundle={pagefindBundle}
-  >
+  <body class='min-h-screen bg-sd-bg text-sd-fg'>
     <ClientRouter />
-    <Header hideSearch={hideSearch} />
+    <Header
+      hideSearch={hideSearch}
+      pagefindPath={pagefindPath}
+      pagefindInstance={pagefindBundle}
+      assetPrefix={assetPrefix}
+    />
     <main class='site-container'>
       <slot />
     </main>

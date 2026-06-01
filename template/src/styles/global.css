@@ -103,8 +103,22 @@ body {
   background: var(--color-sd-accent);
 }
 
-.pagefind-ui__drawer .svelte-e9gkc3 {
-  background: #a6a09b;
-  border-radius: 1rem;
-  padding: 1rem;
+.pagefind-search {
+  --pf-text: var(--sd-fg);
+  --pf-text-secondary: var(--sd-muted);
+  --pf-text-muted: var(--sd-muted);
+  --pf-background: var(--sd-bg);
+  --pf-border: var(--sd-border);
+  --pf-border-focus: var(--sd-muted);
+  --pf-hover: var(--sd-hover);
+  --pf-mark: var(--sd-accent);
+  --pf-outline-focus: var(--sd-accent);
+  --pf-font: inherit;
+  --pf-input-height: 2.25rem;
+  --pf-input-font-size: 16px;
+  --pf-border-radius: 0.25rem;
+  --pf-modal-backdrop: color-mix(in srgb, var(--sd-bg), transparent 18%);
+  --pf-modal-max-width: min(800px, calc(100vw - 2rem));
+  --pf-modal-max-height: min(80dvh, 800px);
+  --pf-modal-top: 5rem;
 }

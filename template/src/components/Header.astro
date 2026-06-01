@@ -9,6 +9,9 @@ import logo from '@assets/logo.svg?url'
 const base = docsConfig.basePath
 const homeHref = base.endsWith('/') ? base : base + '/'
 const hidden = Astro.props?.hideSearch === true
+const pagefindPath = Astro.props?.pagefindPath ?? ''
+const pagefindInstance = Astro.props?.pagefindInstance ?? 'default'
+const assetPrefix = Astro.props?.assetPrefix ?? homeHref
 ---
 
 <nav class="sticky top-0 z-50 bg-(--sd-bg) text-(--sd-fg) border-b border-(--sd-border)">
@@ -24,17 +27,17 @@ const hidden = Astro.props?.hideSearch === true
           <span
             class="relative inline-block px-1 py-[0.5] bg-(--sd-fg) rounded-sm group hover:bg-(--sd-accent) transition-colors"
           >
-            <h1
+            <span
               class="prose text-2xl md:text-4xl font-black uppercase italic tracking-tight leading-none bg-(--sd-bg) bg-clip-text text-transparent"
             >
               {docsConfig.title}
-            </h1>
+            </span>
           </span>
         </span>
       </a>
     </div>
     <div class="flex items-center gap-3">
-      {hidden ? null : <PageFind />}
+      {hidden ? null : <PageFind bundlePath={pagefindPath} baseUrl={assetPrefix} instance={pagefindInstance} />}
       <a
         href={`${base}/colors`}
         class="text-(--sd-muted) hover:text-(--sd-accent) transition-colors"
