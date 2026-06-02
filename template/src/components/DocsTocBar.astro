@@ -49,7 +49,7 @@ const hasToc = items.length > 0
         {hasSidebar && (
           <button
             type="button"
-            class="min-[1000px]:hidden inline-flex items-center gap-2 rounded-sm border border-sd-border px-3 py-1.5 text-sm font-medium text-sd-muted transition-colors hover:border-sd-accent hover:text-sd-accent"
+            class="min-[1000px]:hidden inline-flex items-center gap-2 rounded-sm border border-sd-border px-3 py-1.5 text-sm font-medium text-sd-muted transition-colors hover:border-sd-accent hover:text-sd-accent cursor-pointer"
             aria-controls="docs-sidebar-drawer"
             aria-expanded="false"
             data-sidebar-toggle
@@ -66,7 +66,7 @@ const hasToc = items.length > 0
             </span>
             <button
               type="button"
-              class="inline-flex items-center gap-2 rounded-sm border border-sd-border px-3 py-1.5 text-sm font-medium text-sd-muted transition-colors hover:border-sd-accent hover:text-sd-accent"
+              class="inline-flex items-center gap-2 rounded-sm border border-sd-border px-3 py-1.5 text-sm font-medium text-sd-muted transition-colors hover:border-sd-accent hover:text-sd-accent cursor-pointer"
               aria-controls="docs-toc-drawer"
               aria-expanded="false"
               data-toc-toggle
@@ -105,16 +105,16 @@ const hasToc = items.length > 0
           class="fixed right-0 top-[calc(var(--topbar-height)+3.25rem)] z-50 h-[calc(100vh-var(--topbar-height)-3.25rem)] w-[min(82vw,22rem)] translate-x-full overflow-y-auto border-l border-sd-border bg-sd-bg p-4 transition-transform duration-300 ease-out [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden aria-[hidden=false]:translate-x-0"
           data-toc-drawer
         >
-          <div class="mb-3 flex items-center gap-2 border-b border-sd-border pb-3">
+          <div class="mb-3 flex justify-between items-center gap-2">
+            <h3 class="text-sm uppercase font-bold text-sd-muted">On this page</h3>
             <button
               type="button"
               aria-label="Scroll to top"
-              class="inline-flex h-8 w-8 items-center justify-center rounded-sm border border-sd-border text-sd-muted transition-colors hover:border-sd-accent hover:text-sd-accent"
+              class="inline-flex h-8 w-8 items-center justify-center rounded-sm text-sd-muted transition-colors hover:border-sd-accent hover:text-sd-accent cursor-pointer"
               data-toc-top
             >
               <Icon name="mdi:chevron-double-up" class="text-lg" />
             </button>
-            <h3 class="text-sm uppercase font-bold text-sd-muted">On this page</h3>
           </div>
           <DocsToc {headings} {minLevel} {maxLevel} showTitle={false} />
         </div>
