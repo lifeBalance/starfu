@@ -31,7 +31,6 @@
 .site-container {
   max-width: var(--content-max-w);
   margin-inline: auto;
-  padding-inline: var(--content-pad-x);
 }
 
 /* Global page background bound to theme */
@@ -55,6 +54,10 @@ body {
   --tw-prose-code: var(--color-sd-fg);
   --tw-prose-th-borders: var(--color-sd-border);
   --tw-prose-td-borders: var(--color-sd-border);
+}
+
+.prose :where(h1, h2, h3, h4, h5, h6) {
+  scroll-margin-top: calc(var(--topbar-height) + 4rem);
 }
 
 .prose :not(pre) > code::before,

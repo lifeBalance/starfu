@@ -1,0 +1,115 @@
+---
+import { Icon } from 'astro-icon/components'
+import DocsToc from './DocsToc.astro'
+
+interface Heading {
+  depth: number
+  slug: string
+  text: string
+}
+
+interface Props {
+  headings?: Heading[]
+  minLevel?: number
+  maxLevel?: number
+}
+
+const { headings = [], minLevel = 2, maxLevel = 3 } = Astro.props as Props
+const items = headings.filter(
+  (heading) => heading.depth >= minLevel && heading.depth <= maxLevel
+)
+---
+
+{
+  items.length > 0 && (
+    <nav
+      aria-label="Page table of contents"
+      aria-expanded="false"
+      class="xl:hidden sticky top-[var(--topbar-height)] z-30 -mx-6 mb-4 bg-sd-bg"
+      data-docs-toc-bar
+    >
+      <div class="flex items-center justify-between gap-3 border-x-0 border-y border-sd-border bg-sd-bg px-6 py-2 shadow-[0_4px_0_var(--sd-border)]">
+        <button
+          type="button"
+          aria-label="Scroll to top"
+          class="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-sd-border text-sd-muted transition-colors hover:border-sd-accent hover:text-sd-accent"
+          data-toc-top
+        >
+          <Icon name="mdi:chevron-double-up" class="text-xl" />
+        </button>
+
+        <div class="ml-auto flex min-w-0 items-center gap-3">
+          <span class="truncate text-xs font-bold uppercase tracking-wide text-sd-muted">
+            On this page
+          </span>
+          <button
+            type="button"
+            class="inline-flex items-center gap-2 rounded-sm border border-sd-border px-3 py-1.5 text-sm font-medium text-sd-muted transition-colors hover:border-sd-accent hover:text-sd-accent"
+            aria-controls="docs-toc-drawer"
+            data-toc-toggle
+          >
+            <Icon name="mdi:chevron-left" class="text-lg transition-transform" data-toc-caret />
+            TOC
+          </button>
+        </div>
+      </div>
+
+      <button
+        id="docs-toc-backdrop"
+        type="button"
+        aria-label="Close table of contents"
+        aria-hidden="true"
+        class="fixed inset-x-0 bottom-0 top-[calc(var(--topbar-height)+3.25rem)] z-40 border-0 bg-[color-mix(in_srgb,var(--sd-bg),transparent_18%)] opacity-0 transition-opacity pointer-events-none aria-[hidden=false]:pointer-events-auto aria-[hidden=false]:opacity-100"
+        data-toc-backdrop
+      />
+
+      <div
+        id="docs-toc-drawer"
+        aria-hidden="true"
+        class="fixed right-0 top-[calc(var(--topbar-height)+3.25rem)] z-50 h-[calc(100vh-var(--topbar-height)-3.25rem)] w-[min(82vw,22rem)] translate-x-full overflow-y-auto border-l border-sd-border bg-sd-bg p-4 shadow-[-4px_4px_0_var(--sd-border)] transition-transform duration-300 ease-out [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden aria-[hidden=false]:translate-x-0"
+        data-toc-drawer
+      >
+        <DocsToc {headings} {minLevel} {maxLevel} />
+      </div>
+    </nav>
+  )
+}
+
+<script>
+  function initDocsTocBar() {
+    document.querySelectorAll<HTMLElement>('[data-docs-toc-bar]').forEach((toc) => {
+      if (toc.dataset.initialized === 'true') return
+      toc.dataset.initialized = 'true'
+
+      const toggle = toc.querySelector<HTMLButtonElement>('[data-toc-toggle]')
+      const backdrop = toc.querySelector<HTMLButtonElement>('[data-toc-backdrop]')
+      const drawer = toc.querySelector<HTMLElement>('[data-toc-drawer]')
+      const top = toc.querySelector<HTMLButtonElement>('[data-toc-top]')
+      const caret = toc.querySelector<HTMLElement>('[data-toc-caret]')
+
+      function setOpen(open: boolean) {
+        toc.setAttribute('aria-expanded', String(open))
+        backdrop?.setAttribute('aria-hidden', String(!open))
+        drawer?.setAttribute('aria-hidden', String(!open))
+        caret?.classList.toggle('rotate-180', open)
+      }
+
+      toggle?.addEventListener('click', () => {
+        setOpen(toc.getAttribute('aria-expanded') !== 'true')
+      })
+
+      backdrop?.addEventListener('click', () => setOpen(false))
+
+      drawer?.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((link) => {
+        link.addEventListener('click', () => setOpen(false))
+      })
+
+      top?.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        setOpen(false)
+      })
+    })
+  }
+
+  document.addEventListener('astro:page-load', initDocsTocBar)
+</script>
