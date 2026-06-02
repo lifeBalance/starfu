@@ -91,6 +91,7 @@ const hasToc = items.length > 0
         <div
           id="docs-sidebar-drawer"
           aria-hidden="true"
+          inert
           class="fixed left-0 top-[calc(var(--topbar-height)+3.25rem)] z-50 h-[calc(100vh-var(--topbar-height)-3.25rem)] w-[min(82vw,22rem)] -translate-x-full overflow-y-auto border-r border-sd-border bg-sd-bg transition-transform duration-300 ease-out [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden aria-[hidden=false]:translate-x-0"
           data-sidebar-drawer
         >
@@ -102,6 +103,7 @@ const hasToc = items.length > 0
         <div
           id="docs-toc-drawer"
           aria-hidden="true"
+          inert
           class="fixed right-0 top-[calc(var(--topbar-height)+3.25rem)] z-50 h-[calc(100vh-var(--topbar-height)-3.25rem)] w-[min(82vw,22rem)] translate-x-full overflow-y-auto border-l border-sd-border bg-sd-bg p-4 transition-transform duration-300 ease-out [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden aria-[hidden=false]:translate-x-0"
           data-toc-drawer
         >
@@ -142,16 +144,41 @@ const hasToc = items.length > 0
         backdrop?.setAttribute('aria-hidden', String(!open))
       }
 
+      function moveFocusOut(drawer: HTMLElement | null, fallback: HTMLElement | null) {
+        const active = document.activeElement
+        if (!(active instanceof HTMLElement) || !drawer?.contains(active)) return
+
+        if (fallback && getComputedStyle(fallback).display !== 'none') {
+          fallback.focus({ preventScroll: true })
+        } else {
+          active.blur()
+        }
+      }
+
       function setSidebarOpen(open: boolean) {
+        if (!open) moveFocusOut(sidebarDrawer, sidebarToggle)
+
         toc.dataset.sidebarOpen = String(open)
         sidebarToggle?.setAttribute('aria-expanded', String(open))
         sidebarDrawer?.setAttribute('aria-hidden', String(!open))
+        if (open) {
+          sidebarDrawer?.removeAttribute('inert')
+        } else {
+          sidebarDrawer?.setAttribute('inert', '')
+        }
       }
 
       function setTocOpen(open: boolean) {
+        if (!open) moveFocusOut(tocDrawer, tocToggle)
+
         toc.dataset.tocOpen = String(open)
         tocToggle?.setAttribute('aria-expanded', String(open))
         tocDrawer?.setAttribute('aria-hidden', String(!open))
+        if (open) {
+          tocDrawer?.removeAttribute('inert')
+        } else {
+          tocDrawer?.setAttribute('inert', '')
+        }
         tocCaret?.classList.toggle('rotate-180', open)
       }
 
