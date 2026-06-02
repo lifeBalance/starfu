@@ -40,6 +40,7 @@ const items = headings.filter(
           <li class={`${getIndentClass(heading.depth)} text-sm font-light text-sd-muted`}>
             <a
               href={`#${heading.slug}`}
+              data-docs-toc-link={heading.slug}
               class="block py-1 no-underline transition-colors hover:text-sd-fg"
             >
               {heading.text}
@@ -50,3 +51,112 @@ const items = headings.filter(
     </nav>
   )
 }
+
+<script>
+  declare global {
+    interface Window {
+      __docsTocCleanup?: () => void
+    }
+  }
+
+  function initDocsTocActiveState() {
+    window.__docsTocCleanup?.()
+
+    const links = Array.from(
+      document.querySelectorAll<HTMLAnchorElement>('[data-docs-toc-link]')
+    )
+
+    if (!links.length) return
+
+    const ids = [...new Set(
+      links
+        .map((link) => link.dataset.docsTocLink)
+        .filter((id): id is string => !!id)
+    )]
+
+    const headings = ids
+      .map((id) => document.getElementById(id))
+      .filter((heading): heading is HTMLElement => !!heading)
+
+    if (!headings.length) return
+
+    let activeId = ''
+    let ticking = false
+    let disabledUntil = 0
+
+    function activeOffset() {
+      const topbar = Number.parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue('--topbar-height')
+      ) || 64
+      const tocBar = document.querySelector<HTMLElement>('[data-docs-toc-bar]')
+      const tocBarHeight = tocBar && getComputedStyle(tocBar).display !== 'none'
+        ? tocBar.offsetHeight
+        : 0
+      return topbar + tocBarHeight + 16
+    }
+
+    function setActive(nextId: string) {
+      if (nextId === activeId) return
+      activeId = nextId
+
+      for (const link of links) {
+        const active = link.dataset.docsTocLink === activeId
+        link.classList.toggle('text-sd-accent', active)
+        link.classList.toggle('font-medium', active)
+
+        if (active) {
+          link.setAttribute('aria-current', 'location')
+        } else {
+          link.removeAttribute('aria-current')
+        }
+      }
+    }
+
+    function updateActive() {
+      ticking = false
+      if (Date.now() < disabledUntil) return
+
+      const offset = activeOffset()
+      let nextId = ''
+
+      for (let i = headings.length - 1; i >= 0; i--) {
+        if (headings[i].getBoundingClientRect().top <= offset) {
+          nextId = headings[i].id
+          break
+        }
+      }
+
+      setActive(nextId)
+    }
+
+    function scheduleUpdate() {
+      if (ticking) return
+      ticking = true
+      requestAnimationFrame(updateActive)
+    }
+
+    const clickCleanups = links.map((link) => {
+      const onClick = () => {
+        const id = link.dataset.docsTocLink ?? ''
+        disabledUntil = Date.now() + 800
+        setActive(id)
+        window.setTimeout(scheduleUpdate, 850)
+      }
+      link.addEventListener('click', onClick)
+      return () => link.removeEventListener('click', onClick)
+    })
+
+    window.addEventListener('scroll', scheduleUpdate, { passive: true })
+    window.addEventListener('resize', scheduleUpdate)
+    scheduleUpdate()
+
+    window.__docsTocCleanup = () => {
+      window.removeEventListener('scroll', scheduleUpdate)
+      window.removeEventListener('resize', scheduleUpdate)
+      for (const cleanup of clickCleanups) cleanup()
+      window.__docsTocCleanup = undefined
+    }
+  }
+
+  document.addEventListener('astro:page-load', initDocsTocActiveState)
+</script>
