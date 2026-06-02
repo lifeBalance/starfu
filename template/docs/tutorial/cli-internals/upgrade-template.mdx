@@ -1,0 +1,93 @@
+import Admonition from '@components/Admonition.astro'
+
+# Upgrade Template
+
+`starfu upgrade-template` refreshes the Starfu-managed template files in an existing project.
+
+## Why This Exists
+
+New Starfu releases include improvements to the bundled template. Existing projects already have a copied `.starfu/` directory, so publishing a new Starfu version does not automatically update them.
+
+Use `starfu upgrade-template` when you want an existing project to receive the latest template components, styles, build tooling, search, and navigation improvements.
+
+## What It Updates
+
+The command updates only Starfu-managed files:
+
+- `.starfu/ec.config.mjs`
+- `.starfu/package.json`
+- `.starfu/src/`
+- `.starfu/tsconfig.json`
+- `.starfu/public/`
+
+## What It Never Touches
+
+The command does not touch your documentation content:
+
+- `docs/`
+
+<Admonition variant="warning">
+  Do not use `starfu --force` as a template upgrade command unless your work is committed or backed up. `--force` is a scaffolding option and can overwrite `docs/`.
+</Admonition>
+
+## Astro Config
+
+`.starfu/astro.config.mjs` is special because it contains project-specific configuration, including your site title, repository settings, and section definitions.
+
+`starfu upgrade-template` preserves `.starfu/astro.config.mjs` by default.
+
+If the latest template includes changes to `astro.config.mjs`, the command prompts before replacing it.
+
+## Expected Flow
+
+```sh
+starfu upgrade-template
+```
+
+Example:
+
+```sh
+┌  Starfu Upgrade Template
+│
+◇  Found existing .starfu/
+│
+◆  Update Starfu-managed template files?
+│  ● Yes  ○ No
+│
+▲  .starfu/astro.config.mjs contains project configuration.
+│
+◆  How should astro.config.mjs be handled?
+│  ● Keep existing config
+│  ○ Overwrite with latest template config
+│
+◇  Updated .starfu/src/
+◇  Updated .starfu/package.json
+◇  Preserved .starfu/astro.config.mjs
+│
+└  Template upgrade complete
+```
+
+## After Upgrading
+
+If `.starfu/package.json` changed, reinstall dependencies:
+
+```sh
+cd .starfu
+pnpm install
+```
+
+Then rebuild:
+
+```sh
+pnpm build
+```
+
+## When To Use It
+
+Use `starfu upgrade-template` when:
+
+- You want UI, theme, search, or navigation improvements from a newer Starfu release.
+- You want updated internal components under `.starfu/src/`.
+- You want updated build dependencies or scripts from `.starfu/package.json`.
+
+Do not use it to modify docs content. Your `docs/` folder remains yours.
