@@ -3,6 +3,7 @@ interface Props {
   headings?: Heading[]
   minLevel?: number
   maxLevel?: number
+  showTitle?: boolean
 }
 
 interface Heading {
@@ -11,7 +12,7 @@ interface Heading {
   text: string
 }
 
-const { headings = [], minLevel = 2, maxLevel = 3 } = Astro.props as Props
+const { headings = [], minLevel = 2, maxLevel = 3, showTitle = true } = Astro.props as Props
 
 const getIndentClass = (level: number) => {
   const indents: Record<number, string> = {
@@ -33,7 +34,7 @@ const items = headings.filter(
 {
   items.length > 0 && (
     <nav aria-label="On this page">
-      <h3 class="mb-2 text-sm uppercase font-bold text-sd-muted">On this page</h3>
+      {showTitle && <h3 class="mb-2 text-sm uppercase font-bold text-sd-muted">On this page</h3>}
       <ul class="list-none p-0 m-0">
         {items.map((heading) => (
           <li class={`${getIndentClass(heading.depth)} text-sm font-light text-sd-muted`}>

@@ -70,7 +70,7 @@ const { prev, next } = getPrevNext(nav, currentPath)
   <div class="flex items-start">
     <!-- Left Sidebar - Table of Contents -->
     <aside
-      class="sticky self-start overflow-y-auto w-64 shrink-0 border-r border-sd-border [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      class="hidden min-[1000px]:block sticky self-start overflow-y-auto w-64 shrink-0 border-r border-sd-border [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       style="top: 4rem; height: calc(100vh - 4rem);"
     >
       <div class="p-4">
@@ -80,7 +80,7 @@ const { prev, next } = getPrevNext(nav, currentPath)
 
     <!-- Central section - Main Content -->
     <article class="flex-1 min-w-0 px-6 pb-12">
-      <DocsTocBar {headings} />
+      <DocsTocBar {headings} {nav} {currentPath} />
 
       <div class="py-4">
         <Breadcrumb path={currentPath} {nav} />
