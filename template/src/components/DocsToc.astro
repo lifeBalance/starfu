@@ -99,6 +99,14 @@ const items = headings.filter(
       if (nextId === activeId) return
       activeId = nextId
 
+      const activeLink = links.find((link) => link.dataset.docsTocLink === activeId)
+      const activeText = activeLink?.textContent?.trim() || 'On this page'
+
+      document.querySelectorAll<HTMLElement>('[data-docs-toc-current]').forEach((label) => {
+        label.textContent = activeText
+        label.title = activeText
+      })
+
       for (const link of links) {
         const active = link.dataset.docsTocLink === activeId
         link.classList.toggle('text-sd-accent', active)
