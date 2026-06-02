@@ -16,6 +16,10 @@ const UPGRADE_ITEMS = [
   { src: 'public/', dest: '.starfu/public/' },
 ]
 
+const CLEANUP_ITEMS = [
+  '.starfu/pnpm-workspace.yaml',
+]
+
 async function exists(target: string): Promise<boolean> {
   return fs.access(target).then(() => true, () => false)
 }
@@ -78,12 +82,17 @@ export async function upgradeTemplate({
     await copyItem(templateDir, outputDir, item)
   }
 
+  for (const item of CLEANUP_ITEMS) {
+    await fs.rm(path.join(outputDir, item), { recursive: true, force: true })
+  }
+
   if (overwriteAstroConfig) {
     await writeAstroConfig(templateDir, outputDir)
   }
 
   return {
     updated: UPGRADE_ITEMS.map((item) => item.dest),
+    cleaned: CLEANUP_ITEMS,
     astroConfig: overwriteAstroConfig ? 'overwritten' : 'preserved',
   }
 }
@@ -142,6 +151,10 @@ export async function runUpgradeTemplate(options: Omit<UpgradeTemplateOptions, '
 
   for (const item of result.updated) {
     p.log.success(`Updated ${item}`)
+  }
+
+  for (const item of result.cleaned) {
+    p.log.success(`Removed ${item} if present`)
   }
 
   if (result.astroConfig === 'overwritten') {

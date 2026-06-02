@@ -2,16 +2,16 @@
   "name": "starfu",
   "version": "1.0.11",
   "type": "module",
-  "bin": {
-    "starfu": "./dist/cli.js"
-  },
+  "bin": "dist/cli.js",
   "files": [
     "dist",
     "template",
     "!template/node_modules",
     "!template/pnpm-lock.yaml",
+    "!template/pnpm-workspace.yaml",
     "!template/.astro",
-    "!template/dist"
+    "!template/dist",
+    "!template/public/pagefind-*"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

@@ -66,6 +66,22 @@ describe('upgradeTemplate', () => {
     }
   })
 
+  it('removes invalid pnpm workspace config from existing projects', async () => {
+    const tempDir = await createTempDir()
+    try {
+      await scaffold({ templateDir: TEMPLATE_ROOT, outputDir: tempDir, ...defaultOptions })
+
+      const workspacePath = path.join(tempDir, '.starfu/pnpm-workspace.yaml')
+      await writeFile(workspacePath, 'allowBuilds:\n  esbuild: true\n', 'utf8')
+
+      await upgradeTemplate({ templateDir: TEMPLATE_ROOT, outputDir: tempDir })
+
+      expect(await exists(workspacePath)).toBe(false)
+    } finally {
+      await cleanup(tempDir)
+    }
+  })
+
   it('preserves astro.config.mjs by default', async () => {
     const tempDir = await createTempDir()
     try {
