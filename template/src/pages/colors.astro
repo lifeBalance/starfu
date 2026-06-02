@@ -56,6 +56,20 @@ const vars = ['--sd-bg','--sd-fg','--sd-muted','--sd-accent','--sd-border','--sd
     const lightDirty = new Set<string>()
     const darkDirty = new Set<string>()
 
+    function themeVar(v: string) {
+      return v.replace('--sd-', '--color-sd-')
+    }
+
+    function setThemeValue(v: string, value: string) {
+      document.documentElement.style.setProperty(v, value)
+      document.documentElement.style.setProperty(themeVar(v), value)
+    }
+
+    function removeThemeValue(v: string) {
+      document.documentElement.style.removeProperty(v)
+      document.documentElement.style.removeProperty(themeVar(v))
+    }
+
     function isDark() {
       return document.documentElement.getAttribute('data-theme') === 'dark'
     }
@@ -77,14 +91,16 @@ const vars = ['--sd-bg','--sd-fg','--sd-muted','--sd-accent','--sd-border','--sd
       const saved: [string, string][] = []
       for (const v of VARS) {
         const inline = document.documentElement.style.getPropertyValue(v)
-        if (inline) {
-          saved.push([v, inline])
-          document.documentElement.style.removeProperty(v)
+        const inlineTheme = document.documentElement.style.getPropertyValue(themeVar(v))
+        if (inline || inlineTheme) {
+          if (inline) saved.push([v, inline])
+          if (inlineTheme) saved.push([themeVar(v), inlineTheme])
+          removeThemeValue(v)
         }
       }
       const style = getComputedStyle(document.documentElement)
       for (const v of VARS) {
-        result[v] = toHex(style.getPropertyValue(v).trim())
+        result[v] = toHex(style.getPropertyValue(themeVar(v)).trim())
       }
       // Restore inline overrides
       for (const [v, val] of saved) {
@@ -108,7 +124,7 @@ const vars = ['--sd-bg','--sd-fg','--sd-muted','--sd-accent','--sd-border','--sd
       const map = activeMap()
       for (const v of VARS) {
         if (map[v]) {
-          document.documentElement.style.setProperty(v, map[v])
+          setThemeValue(v, map[v])
         }
       }
       updateUI()
@@ -157,7 +173,7 @@ const vars = ['--sd-bg','--sd-fg','--sd-muted','--sd-accent','--sd-border','--sd
       dirty.clear()
       // Remove inline overrides so we can read stylesheet defaults
       for (const v of VARS) {
-        document.documentElement.style.removeProperty(v)
+        removeThemeValue(v)
       }
       const defaults = readDefaults()
       for (const v of VARS) {
@@ -180,7 +196,7 @@ const vars = ['--sd-bg','--sd-fg','--sd-muted','--sd-accent','--sd-border','--sd
           const dirty = activeDirty()
           map[v] = picker.value
           dirty.add(v)
-          document.documentElement.style.setProperty(v, picker.value)
+          setThemeValue(v, picker.value)
           const swatch = document.querySelector<HTMLElement>(`[data-swatch="${v}"]`)
           if (swatch) swatch.style.background = picker.value
           const label = document.querySelector(`[data-var="${v}"]`)
