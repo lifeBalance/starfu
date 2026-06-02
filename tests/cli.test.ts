@@ -1,5 +1,5 @@
 import { tmpdir } from 'node:os'
-import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import * as path from 'node:path'
 import { describe, it, expect } from 'vitest'
 import { run } from '../cli/cli'
@@ -43,6 +43,23 @@ describe('cli run', () => {
       const content = await readFile(astroConfigPath, 'utf8')
 
       expect(content).toContain("'My Custom Title'")
+    } finally {
+      await cleanup(tempDir)
+    }
+  })
+
+  it('supports upgrade-template without overwriting docs', async () => {
+    const tempDir = await createTempDir()
+    try {
+      await run(['node', 'cli', '--dir', tempDir, '--title', 'Test Site'])
+
+      const docsPath = path.join(tempDir, 'docs/tutorial/intro.mdx')
+      const customDocs = '# Existing Docs\n\nKeep me.'
+      await writeFile(docsPath, customDocs, 'utf8')
+
+      await run(['node', 'cli', 'upgrade-template', '--dir', tempDir])
+
+      expect(await readFile(docsPath, 'utf8')).toBe(customDocs)
     } finally {
       await cleanup(tempDir)
     }

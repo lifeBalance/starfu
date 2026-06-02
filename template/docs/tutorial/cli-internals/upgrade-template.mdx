@@ -10,6 +10,22 @@ New Starfu releases include improvements to the bundled template. Existing proje
 
 Use `starfu upgrade-template` when you want an existing project to receive the latest template components, styles, build tooling, search, and navigation improvements.
 
+## Usage
+
+Run from the project root:
+
+```sh
+starfu upgrade-template
+```
+
+Or target a project directory explicitly:
+
+```sh
+starfu upgrade-template --dir path/to/project
+```
+
+`--dir` should point at the project root that contains `.starfu/`, not at the `.starfu/` directory itself.
+
 ## What It Updates
 
 The command updates only Starfu-managed files:
@@ -67,6 +83,12 @@ Example:
 └  Template upgrade complete
 ```
 
+## Non-Interactive Use
+
+In non-interactive environments, `starfu upgrade-template` preserves `.starfu/astro.config.mjs` automatically and updates the Starfu-managed files only.
+
+It does not prompt and it does not overwrite project configuration.
+
 ## After Upgrading
 
 If `.starfu/package.json` changed, reinstall dependencies:
@@ -81,6 +103,18 @@ Then rebuild:
 ```sh
 pnpm build
 ```
+
+## Review Before Committing
+
+After upgrading, review the changes before committing:
+
+```sh
+git diff -- .starfu
+```
+
+You should expect changes under `.starfu/`. You should not see changes under `docs/`.
+
+If a release mentions required `.starfu/astro.config.mjs` changes, compare your config with the latest template and merge changes manually unless you choose to overwrite it.
 
 ## When To Use It
 

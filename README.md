@@ -95,6 +95,14 @@ pnpm dlx starfu deploy # or: npx starfu deploy
 
 This will detect your GitHub/GitLab repository and offer to either generate a CI workflow or deploy manually by pushing to a Pages branch. Follow the on-screen prompts to configure deployment.
 
+### Upgrade an existing template
+
+```sh
+pnpm dlx starfu upgrade-template # or: npx starfu upgrade-template
+```
+
+Updates Starfu-managed files in `.starfu/` without touching `docs/`. Use `--dir <path>` to target another project directory.
+
 ## 📝 Adding Content
 
 Create markdown or MDX files in `docs/`:

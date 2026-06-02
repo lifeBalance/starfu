@@ -7,6 +7,7 @@ import { execa } from 'execa'
 import * as p from '@clack/prompts'
 import { scaffold, getGitInfo } from './scaffold.js'
 import { runDeploy } from './deploy.js'
+import { runUpgradeTemplate } from './upgrade-template.js'
 
 type PackageManager = 'pnpm' | 'npm' | 'yarn' | 'bun'
 
@@ -40,7 +41,7 @@ function getInstallCommand(pm: PackageManager): [string, string[]] {
 }
 
 interface CliOptions {
-  command: 'init' | 'deploy'
+  command: 'init' | 'deploy' | 'upgrade-template'
   dir?: string
   force?: boolean
   title?: string
@@ -54,6 +55,8 @@ function parseArgs(argv: string[]): CliOptions {
     const arg = args[i]
     if (arg === 'deploy') {
       options.command = 'deploy'
+    } else if (arg === 'upgrade-template') {
+      options.command = 'upgrade-template'
     } else if (arg === '--dir') {
       options.dir = args[++i]
     } else if (arg.startsWith('--dir=')) {
@@ -73,6 +76,9 @@ function parseArgs(argv: string[]): CliOptions {
 export async function run(argv: string[] = process.argv) {
   const options = parseArgs(argv)
   const cwd = process.cwd()
+  const cliDir = path.dirname(new URL(import.meta.url).pathname)
+  const templateDir = path.join(cliDir, '..', 'template')
+  const outputDir = options.dir ? path.resolve(cwd, options.dir) : cwd
 
   // Handle deploy subcommand
   if (options.command === 'deploy') {
@@ -80,9 +86,11 @@ export async function run(argv: string[] = process.argv) {
     return
   }
 
-  const cliDir = path.dirname(new URL(import.meta.url).pathname)
-  const templateDir = path.join(cliDir, '..', 'template')
-  const outputDir = options.dir ? path.resolve(cwd, options.dir) : cwd
+  if (options.command === 'upgrade-template') {
+    await runUpgradeTemplate({ templateDir, outputDir })
+    return { templateDir, outputDir }
+  }
+
   const starfuDir = path.join(outputDir, '.starfu')
 
   const pm = detectPackageManager(outputDir)
