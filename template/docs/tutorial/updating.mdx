@@ -1,0 +1,88 @@
+# Updating Starfu
+
+Starfu has two moving parts:
+
+- The `starfu` CLI you run from npm.
+- The `.starfu/` folder that was copied into your project when you scaffolded it.
+
+Running a newer CLI does not automatically rewrite your existing `.starfu/`
+folder. That is intentional. Your project may have local config, custom docs,
+or deployment settings we should not stomp on.
+
+## Update the template files
+
+From your project root:
+
+```sh
+starfu upgrade-template
+```
+
+Or, if you do not have `starfu` installed globally:
+
+```sh
+npx starfu upgrade-template
+```
+
+This refreshes the Starfu-managed files in `.starfu/`:
+
+- `.starfu/src/`
+- `.starfu/package.json`
+- `.starfu/tsconfig.json`
+- `.starfu/public/`
+- `.starfu/ec.config.mjs`
+
+It does not touch your docs:
+
+- `docs/`
+
+## Astro config is special
+
+`.starfu/astro.config.mjs` usually contains your site title, repo info, and
+section config. Starfu keeps it by default.
+
+If a release mentions that `astro.config.mjs` changed, compare your file with
+the latest template and merge the change manually.
+
+You can also choose to overwrite it during the upgrade. If you do, Starfu saves
+your previous config first:
+
+```txt
+.starfu/astro.config.mjs.bak
+```
+
+Use that backup to copy your custom sections, title, repo settings, or other
+edits back into the new config.
+
+## After upgrading
+
+If `.starfu/package.json` changed, reinstall dependencies:
+
+```sh
+cd .starfu
+pnpm install
+```
+
+Then rebuild:
+
+```sh
+pnpm build
+```
+
+Before committing, check what changed:
+
+```sh
+git diff -- .starfu
+```
+
+You should expect changes under `.starfu/`. You should not see changes under
+`docs/`.
+
+## Do not use `--force` for updates
+
+`starfu --force` is for scaffolding. It can overwrite files you care about.
+
+For existing projects, use:
+
+```sh
+starfu upgrade-template
+```

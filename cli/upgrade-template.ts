@@ -45,8 +45,13 @@ function readConfigValue(content: string, key: string): string | null {
 
 async function writeAstroConfig(templateDir: string, outputDir: string) {
   const dest = path.join(outputDir, '.starfu/astro.config.mjs')
+  const backup = `${dest}.bak`
   const current = await fs.readFile(dest, 'utf8').catch(() => '')
   const folderName = path.basename(path.resolve(outputDir))
+
+  if (current) {
+    await fs.writeFile(backup, current, 'utf8')
+  }
 
   const values = {
     title: readConfigValue(current, 'title') ?? folderName,
@@ -62,6 +67,8 @@ async function writeAstroConfig(templateDir: string, outputDir: string) {
   content = content.replace(/%%REPO%%/g, values.repo)
 
   await fs.writeFile(dest, content, 'utf8')
+
+  return current ? '.starfu/astro.config.mjs.bak' : undefined
 }
 
 export async function upgradeTemplate({
@@ -86,14 +93,17 @@ export async function upgradeTemplate({
     await fs.rm(path.join(outputDir, item), { recursive: true, force: true })
   }
 
+  let astroConfigBackup: string | undefined
+
   if (overwriteAstroConfig) {
-    await writeAstroConfig(templateDir, outputDir)
+    astroConfigBackup = await writeAstroConfig(templateDir, outputDir)
   }
 
   return {
     updated: UPGRADE_ITEMS.map((item) => item.dest),
     cleaned: CLEANUP_ITEMS,
     astroConfig: overwriteAstroConfig ? 'overwritten' : 'preserved',
+    astroConfigBackup,
   }
 }
 
@@ -159,6 +169,9 @@ export async function runUpgradeTemplate(options: Omit<UpgradeTemplateOptions, '
 
   if (result.astroConfig === 'overwritten') {
     p.log.success('Updated .starfu/astro.config.mjs')
+    if (result.astroConfigBackup) {
+      p.log.info(`Backed up previous config to ${result.astroConfigBackup}`)
+    }
   } else {
     p.log.info('Preserved .starfu/astro.config.mjs')
   }

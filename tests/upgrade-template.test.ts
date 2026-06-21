@@ -94,6 +94,7 @@ describe('upgradeTemplate', () => {
       await upgradeTemplate({ templateDir: TEMPLATE_ROOT, outputDir: tempDir })
 
       expect(await readFile(configPath, 'utf8')).toBe(customConfig)
+      expect(await exists(`${configPath}.bak`)).toBe(false)
     } finally {
       await cleanup(tempDir)
     }
@@ -123,10 +124,40 @@ const starfuConfig = {
       await upgradeTemplate({ templateDir: TEMPLATE_ROOT, outputDir: tempDir, overwriteAstroConfig: true })
 
       const upgraded = await readFile(configPath, 'utf8')
+      const backup = await readFile(`${configPath}.bak`, 'utf8')
       expect(upgraded).toContain("title: process.env.STARFU_TITLE || 'Custom Title'")
       expect(upgraded).toContain("platform: process.env.STARFU_PLATFORM || 'gitlab'")
       expect(upgraded).toContain("username: process.env.STARFU_USERNAME || 'custom-user'")
       expect(upgraded).toContain("repo: process.env.STARFU_REPO || 'custom-repo'")
+      expect(backup).toContain("title: process.env.STARFU_TITLE || 'Custom Title'")
+      expect(backup).toContain("platform: process.env.STARFU_PLATFORM || 'gitlab'")
+      expect(backup).toContain("username: process.env.STARFU_USERNAME || 'custom-user'")
+      expect(backup).toContain("repo: process.env.STARFU_REPO || 'custom-repo'")
+    } finally {
+      await cleanup(tempDir)
+    }
+  })
+
+  it('overwrites existing astro.config.mjs.bak with the latest pre-overwrite config', async () => {
+    const tempDir = await createTempDir()
+    try {
+      await scaffold({ templateDir: TEMPLATE_ROOT, outputDir: tempDir, ...defaultOptions })
+
+      const configPath = path.join(tempDir, '.starfu/astro.config.mjs')
+      await writeFile(`${configPath}.bak`, 'old backup', 'utf8')
+      const customConfig = `
+const starfuConfig = {
+  title: process.env.STARFU_TITLE || 'Latest Custom Title',
+  platform: process.env.STARFU_PLATFORM || 'github',
+  username: process.env.STARFU_USERNAME || 'latest-user',
+  repo: process.env.STARFU_REPO || 'latest-repo',
+}
+`
+      await writeFile(configPath, customConfig, 'utf8')
+
+      await upgradeTemplate({ templateDir: TEMPLATE_ROOT, outputDir: tempDir, overwriteAstroConfig: true })
+
+      expect(await readFile(`${configPath}.bak`, 'utf8')).toBe(customConfig)
     } finally {
       await cleanup(tempDir)
     }

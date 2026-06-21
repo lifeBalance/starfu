@@ -54,6 +54,14 @@ The command does not touch your documentation content:
 
 If the latest template includes changes to `astro.config.mjs`, the command prompts before replacing it.
 
+When you choose to overwrite it, Starfu saves the previous config first:
+
+```txt
+.starfu/astro.config.mjs.bak
+```
+
+The backup is intentionally simple: it is the config you had right before the overwrite.
+
 ## Expected Flow
 
 ```sh
@@ -114,7 +122,7 @@ git diff -- .starfu
 
 You should expect changes under `.starfu/`. You should not see changes under `docs/`.
 
-If a release mentions required `.starfu/astro.config.mjs` changes, compare your config with the latest template and merge changes manually unless you choose to overwrite it.
+If a release mentions required `.starfu/astro.config.mjs` changes, compare your config with the latest template and merge changes manually unless you choose to overwrite it. If you overwrite it, copy any custom settings you still need from `.starfu/astro.config.mjs.bak`.
 
 ## When To Use It
 
