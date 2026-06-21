@@ -1,0 +1,95 @@
+---
+title: Copy Page Menu
+---
+
+# Copy Page Menu
+
+Every docs page gets a small **Copy page** button near the breadcrumb.
+
+It does one simple thing: fetches the Markdown version of the current page
+and copies it to your clipboard. The dropdown also lets you open that
+Markdown directly, or send the page URL to ChatGPT or Claude.
+
+This is useful when you want to hand a docs page to an LLM without making it
+scrape the rendered HTML.
+
+## How it works
+
+For every docs page, Starfu builds a matching `.md` file:
+
+```txt
+/tutorial/intro      -> HTML page
+/tutorial/intro.md   -> Markdown export
+```
+
+These `.md` files are generated during `astro build`. There is no server
+involved. After deploy, they are just static files sitting next to the HTML
+pages.
+
+The button fetches that static `.md` file:
+
+```ts
+const res = await fetch(markdownUrl)
+const text = await res.text()
+await navigator.clipboard.writeText(text)
+```
+
+So **Copy page** copies the Markdown export, not the visible page text.
+
+## Why not copy the `.mdx` file?
+
+Docs are written in MDX, and MDX can contain imports and components:
+
+```mdx
+import code from './example.go?raw'
+
+<Code code={code} lang="go" title="example.go" />
+```
+
+That is great for the Astro page, but not great for a raw Markdown reader.
+The raw `.mdx` file would still contain the import and component instead of
+the actual code.
+
+The Markdown export does a small cleanup pass:
+
+- Removes frontmatter.
+- Removes MDX import lines.
+- Resolves `?raw` code imports used by `<Code />`.
+- Turns supported `<Code />` blocks into fenced code blocks.
+- Turns `<Admonition>` callouts into `> [!NOTE]` style alerts.
+- Leaves fenced code examples alone.
+
+That last bit matters. If a page is teaching you how to write
+`<Admonition>`, the example stays an example. It does not get converted by
+accident.
+
+## What it supports
+
+The exporter is intentionally small. It handles the patterns Starfu docs
+actually use:
+
+```mdx
+<Code code={example} lang="ts" title="example.ts" />
+
+<Admonition type="tip" title="Heads up">
+  Some useful note.
+</Admonition>
+```
+
+It is not a full MDX-to-Markdown compiler. If a page uses custom components
+like tabs, those may still show up as component markup in the `.md` export.
+
+That is fine for now. The goal is not perfect Markdown for every possible
+MDX file. The goal is a useful, readable copy of the page for humans and
+LLMs.
+
+## Menu actions
+
+The menu has four actions:
+
+- **Copy page** copies the Markdown export.
+- **View as Markdown** opens the `.md` file in a new tab.
+- **Open in ChatGPT** opens ChatGPT with a prompt pointing at the `.md` URL.
+- **Open in Claude** does the same for Claude.
+
+If copying fails, the button briefly shows **Copy failed** and then resets.

@@ -1,0 +1,360 @@
+---
+// src/components/CopyPageMenu.astro
+//
+// Split button: left segment copies the page as Markdown to the clipboard,
+// right segment (chevron) opens a menu with "View as Markdown",
+// "Open in ChatGPT", and "Open in Claude".
+//
+// Usage:
+//   <CopyPageMenu markdownUrl={`${Astro.url.pathname}.md`} />
+//
+// Assumes a sibling route exists that serves the page's raw Markdown,
+// e.g. /concurrency/synchronization/mutexes.md
+
+import { Icon } from 'astro-icon/components'
+
+interface Props {
+  /** URL to the plain-Markdown version of the current page, e.g. `${pathname}.md` */
+  markdownUrl: string
+  class?: string
+}
+
+const props = Astro.props as Props
+const classes = ['copy-page-menu', props.class].filter(Boolean).join(' ')
+---
+
+<div class={classes} data-copy-page-menu data-markdown-url={props.markdownUrl}>
+  <div class="cpm-trigger-group">
+    <button
+      type="button"
+      class="cpm-copy-btn"
+      data-cpm-copy-btn
+      aria-live="polite"
+    >
+      <Icon name="mdi:content-copy" width="16" height="16" data-cpm-icon-default />
+      <Icon name="mdi:loading" width="16" height="16" data-cpm-icon-loading class="cpm-spin" />
+      <Icon name="mdi:check" width="16" height="16" data-cpm-icon-done />
+      <span data-cpm-copy-label>Copy page</span>
+    </button>
+
+    <button
+      type="button"
+      class="cpm-menu-btn"
+      data-cpm-menu-btn
+      aria-haspopup="menu"
+      aria-expanded="false"
+      aria-label="More copy options"
+    >
+      <Icon name="mdi:chevron-down" width="16" height="16" />
+    </button>
+  </div>
+
+  <div class="cpm-menu" data-cpm-menu role="menu" hidden>
+    <button type="button" class="cpm-item" data-cpm-action="copy" role="menuitem">
+      <Icon name="mdi:content-copy" width="20" height="20" class="cpm-item-icon" />
+      <span class="cpm-item-text">
+        <span class="cpm-item-title">Copy page</span>
+        <span class="cpm-item-desc">Copy page as Markdown for LLMs</span>
+      </span>
+    </button>
+
+    <a class="cpm-item" data-cpm-action="view" role="menuitem">
+      <Icon name="mdi:language-markdown" width="20" height="20" class="cpm-item-icon" />
+      <span class="cpm-item-text">
+        <span class="cpm-item-title">
+          View as Markdown
+          <Icon name="mdi:arrow-top-right" width="14" height="14" class="cpm-item-external" />
+        </span>
+        <span class="cpm-item-desc">View this page as plain text</span>
+      </span>
+    </a>
+
+    <a class="cpm-item" data-cpm-action="chatgpt" role="menuitem">
+      <Icon name="mdi:robot-outline" width="20" height="20" class="cpm-item-icon" />
+      <span class="cpm-item-text">
+        <span class="cpm-item-title">
+          Open in ChatGPT
+          <Icon name="mdi:arrow-top-right" width="14" height="14" class="cpm-item-external" />
+        </span>
+        <span class="cpm-item-desc">Ask questions about this page</span>
+      </span>
+    </a>
+
+    <a class="cpm-item" data-cpm-action="claude" role="menuitem">
+      <Icon name="mdi:asterisk" width="20" height="20" class="cpm-item-icon" />
+      <span class="cpm-item-text">
+        <span class="cpm-item-title">
+          Open in Claude
+          <Icon name="mdi:arrow-top-right" width="14" height="14" class="cpm-item-external" />
+        </span>
+        <span class="cpm-item-desc">Ask questions about this page</span>
+      </span>
+    </a>
+  </div>
+</div>
+
+<style>
+  .copy-page-menu {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .cpm-trigger-group {
+    display: inline-flex;
+    align-items: stretch;
+    border: 1px solid var(--color-border, oklch(1 0 0 / 0.12));
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+
+  .cpm-copy-btn,
+  .cpm-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--color-surface, oklch(0.2 0 0));
+    color: var(--color-text, oklch(0.92 0 0));
+    border: none;
+    cursor: pointer;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1;
+    transition: background-color 0.15s ease;
+  }
+
+  .cpm-copy-btn {
+    padding: 0.5rem 0.7rem;
+    border-right: 1px solid var(--color-border, oklch(1 0 0 / 0.12));
+  }
+
+  .cpm-menu-btn {
+    padding: 0.5rem 0.5rem;
+  }
+
+  .cpm-copy-btn:hover,
+  .cpm-menu-btn:hover {
+    background: var(--color-surface-hover, oklch(0.26 0 0));
+  }
+
+  .cpm-copy-btn:focus-visible,
+  .cpm-menu-btn:focus-visible,
+  .cpm-item:focus-visible {
+    outline: 2px solid var(--color-accent, oklch(0.7 0.15 250));
+    outline-offset: -2px;
+  }
+
+  /* Icon state swapping: only one of the three is shown at a time */
+  .cpm-copy-btn :global(svg) {
+    display: none;
+  }
+  .copy-page-menu[data-state='idle'] .cpm-copy-btn :global([data-cpm-icon-default]),
+  .copy-page-menu:not([data-state]) .cpm-copy-btn :global([data-cpm-icon-default]) {
+    display: inline-block;
+  }
+  .copy-page-menu[data-state='copying'] .cpm-copy-btn :global([data-cpm-icon-loading]) {
+    display: inline-block;
+  }
+  .copy-page-menu[data-state='copied'] .cpm-copy-btn :global([data-cpm-icon-done]) {
+    display: inline-block;
+    color: var(--color-success, oklch(0.75 0.18 145));
+  }
+
+  .cpm-spin {
+    animation: cpm-spin 0.8s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cpm-spin {
+      animation: none;
+    }
+  }
+  @keyframes cpm-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Menu */
+  .cpm-menu {
+    position: absolute;
+    top: calc(100% + 0.4rem);
+    right: 0;
+    z-index: 50;
+    min-width: 19rem;
+    padding: 0.4rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--color-border, oklch(1 0 0 / 0.12));
+    background: var(--color-surface, oklch(0.13 0 0));
+    box-shadow:
+      0 10px 30px oklch(0 0 0 / 0.4),
+      0 2px 6px oklch(0 0 0 / 0.3);
+  }
+
+  .cpm-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.6rem 0.6rem;
+    border: none;
+    border-radius: 0.5rem;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    font: inherit;
+  }
+
+  .cpm-item:hover {
+    background: var(--color-surface-hover, oklch(0.22 0 0));
+  }
+
+  .cpm-item-icon {
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+    color: var(--color-text-muted, oklch(0.7 0 0));
+  }
+
+  .cpm-item-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+
+  .cpm-item-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text, oklch(0.95 0 0));
+  }
+
+  .cpm-item-external {
+    color: var(--color-text-muted, oklch(0.6 0 0));
+  }
+
+  .cpm-item-desc {
+    font-size: 0.8125rem;
+    color: var(--color-text-muted, oklch(0.62 0 0));
+  }
+</style>
+
+<script>
+  function initCopyPageMenu(root: HTMLElement) {
+    if (root.dataset.cpmInitialized) return
+
+    const rawMarkdownUrl = root.dataset.markdownUrl
+    if (!rawMarkdownUrl) return
+
+    const copyBtn = root.querySelector<HTMLButtonElement>('[data-cpm-copy-btn]')
+    const menuBtn = root.querySelector<HTMLButtonElement>('[data-cpm-menu-btn]')
+    const menu = root.querySelector<HTMLDivElement>('[data-cpm-menu]')
+    const rawCopyLabel = root.querySelector<HTMLSpanElement>('[data-cpm-copy-label]')
+    if (!copyBtn || !menuBtn || !menu || !rawCopyLabel) return
+
+    const markdownUrl = rawMarkdownUrl
+    const copyLabel = rawCopyLabel
+    const absoluteMdUrl = new URL(markdownUrl, window.location.origin).toString()
+    root.dataset.cpmInitialized = 'true'
+
+    // Wire external-action links now that we know the page URL.
+    const viewLink = menu.querySelector<HTMLAnchorElement>('[data-cpm-action="view"]')
+    const chatgptLink = menu.querySelector<HTMLAnchorElement>('[data-cpm-action="chatgpt"]')
+    const claudeLink = menu.querySelector<HTMLAnchorElement>('[data-cpm-action="claude"]')
+
+    if (viewLink) {
+      viewLink.href = absoluteMdUrl
+      viewLink.target = '_blank'
+      viewLink.rel = 'noopener noreferrer'
+    }
+    if (chatgptLink) {
+      chatgptLink.href = `https://chat.openai.com/?q=${encodeURIComponent(
+        `Read ${absoluteMdUrl} so I can ask questions about it.`
+      )}`
+      chatgptLink.target = '_blank'
+      chatgptLink.rel = 'noopener noreferrer'
+    }
+    if (claudeLink) {
+      claudeLink.href = `https://claude.ai/new?q=${encodeURIComponent(
+        `Read ${absoluteMdUrl} so I can ask questions about it.`
+      )}`
+      claudeLink.target = '_blank'
+      claudeLink.rel = 'noopener noreferrer'
+    }
+
+    let copyTimer: ReturnType<typeof setTimeout> | undefined
+
+    async function copyPageMarkdown() {
+      root.setAttribute('data-state', 'copying')
+      copyLabel.textContent = 'Copying…'
+
+      try {
+        const res = await fetch(markdownUrl)
+        if (!res.ok) throw new Error(`Failed to fetch markdown: ${res.status}`)
+        const text = await res.text()
+        await navigator.clipboard.writeText(text)
+
+        root.setAttribute('data-state', 'copied')
+        copyLabel.textContent = 'Copied!'
+      } catch (err) {
+        console.error('Copy page failed:', err)
+        root.setAttribute('data-state', 'idle')
+        copyLabel.textContent = 'Copy failed'
+      } finally {
+        clearTimeout(copyTimer)
+        copyTimer = setTimeout(() => {
+          root.setAttribute('data-state', 'idle')
+          copyLabel.textContent = 'Copy page'
+        }, 1800)
+      }
+    }
+
+    function openMenu() {
+      menu!.hidden = false
+      menuBtn!.setAttribute('aria-expanded', 'true')
+      document.addEventListener('click', onDocClick, true)
+      document.addEventListener('keydown', onKeydown)
+    }
+
+    function closeMenu() {
+      menu!.hidden = true
+      menuBtn!.setAttribute('aria-expanded', 'false')
+      document.removeEventListener('click', onDocClick, true)
+      document.removeEventListener('keydown', onKeydown)
+    }
+
+    function onDocClick(e: MouseEvent) {
+      if (!root.contains(e.target as Node)) closeMenu()
+    }
+
+    function onKeydown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        closeMenu()
+        menuBtn?.focus()
+      }
+    }
+
+    copyBtn.addEventListener('click', copyPageMarkdown)
+
+    menuBtn.addEventListener('click', () => {
+      const isOpen = menuBtn.getAttribute('aria-expanded') === 'true'
+      isOpen ? closeMenu() : openMenu()
+    })
+
+    menu.querySelector('[data-cpm-action="copy"]')?.addEventListener('click', () => {
+      closeMenu()
+      copyPageMarkdown()
+    })
+  }
+
+  function initCopyPageMenus() {
+    document
+      .querySelectorAll<HTMLElement>('[data-copy-page-menu]')
+      .forEach(initCopyPageMenu)
+  }
+
+  initCopyPageMenus()
+  document.addEventListener('astro:page-load', initCopyPageMenus)
+</script>

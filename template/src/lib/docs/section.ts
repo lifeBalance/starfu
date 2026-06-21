@@ -1,5 +1,6 @@
 import { parseTocConfig } from './tocParser'
 import { docsConfig, getGlobRegistry } from './config'
+import path from 'node:path'
 
 const Path = {
   normalize: (p: string) => p.replace(/\/$/, ''),
@@ -105,6 +106,27 @@ export function getDocStaticPaths() {
   return listSectionPageParams().map(({ section, page }) => ({
     params: { section, page },
   }))
+}
+
+function toSourceFilePath(fs: string) {
+  if (fs.startsWith('/')) {
+    return path.join(process.cwd(), fs.slice(1))
+  }
+
+  return path.resolve(process.cwd(), fs)
+}
+
+export function resolveDocSourcePath(section: string, segment: string) {
+  const sec = Path.trimSlashes(section)
+  const targetRoute = Path.normalize(`/${sec}${segment ? `/${segment}` : ''}`)
+  const mods = store.getModsForSection(sec)
+
+  for (const fs of Object.keys(mods)) {
+    const route = Path.normalize(Path.fsToRoute(fs))
+    if (route === targetRoute) return toSourceFilePath(fs)
+  }
+
+  return null
 }
 
 function flattenNav(nav: any[]) {

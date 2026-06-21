@@ -7,6 +7,7 @@ import TocSidebar from '@components/sidebar/TocSidebar.astro'
 import Breadcrumb from '@components/Breadcrumb.astro'
 import DocsToc from '@components/DocsToc.astro'
 import DocsTocBar from '@components/DocsTocBar.astro'
+import CopyPageMenu from '@components/CopyPageMenu.astro'
 
 // Docs engine API: section factory, static paths, prev/next, and resolver/redirect logic
 import {
@@ -83,7 +84,10 @@ const { prev, next } = getPrevNext(nav, currentPath)
       <DocsTocBar {headings} {nav} {currentPath} />
 
       <div class="py-4 max-[999px]:mx-auto max-[999px]:max-w-prose">
-        <Breadcrumb path={currentPath} {nav} />
+        <div class="flex items-center justify-between gap-4">
+          <Breadcrumb path={currentPath} {nav} />
+          {Page && <CopyPageMenu markdownUrl={`${currentPath}.md`} />}
+        </div>
       </div>
       <div id="content" class="prose pb-20 max-[999px]:mx-auto" data-pagefind-body>
         {
