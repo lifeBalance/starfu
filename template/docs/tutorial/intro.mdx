@@ -32,16 +32,8 @@ Each section is self-contained with its own sidebar navigation, but they all sha
 ## Quick Start
 
 <Tabs syncKey="pkg">
-  <TabItem label="pnpm (recommended)">
-    ```sh
-    pnpm dlx starfu
-    ```
-  </TabItem>
-  <TabItem label="npm">
-    ```sh
-    npx starfu
-    ```
-  </TabItem>
+  <TabItem label="pnpm (recommended)">```sh pnpm dlx starfu ```</TabItem>
+  <TabItem label="npm">```sh npx starfu ```</TabItem>
 </Tabs>
 
 That's it. You'll be guided through:
@@ -77,12 +69,14 @@ your-project/
   └── docs/          # Your markdown/mdx content goes here
 ```
 
-<Admonition>
- The `docs/` folder include some documentation sections just for illustrative purposes. You're supposed to replace them with your stuff.
-</Admonition>
+> [!NOTE]
+> The `docs/` folder include some documentation sections just for illustrative purposes. You're supposed to replace them with your stuff.
 
 <Admonition type="tip" title="VS Code Users">
-If you open the project before installing dependencies, you may see a TypeScript error about `astro/tsconfigs/strict` not found. This is safe to ignore—it disappears after running `pnpm install`. If the error persists, run **Developer: Reload Window** from the command palette.
+  If you open the project before installing dependencies, you may see a
+  TypeScript error about `astro/tsconfigs/strict` not found. This is safe to
+  ignore—it disappears after running `pnpm install`. If the error persists, run
+  **Developer: Reload Window** from the command palette.
 </Admonition>
 
 Each sections is configured in `.starfu/astro.config.mjs`:
@@ -92,10 +86,10 @@ docsIntegration({
   title: 'My Docs',
   sections: [
     {
-      root: '../docs/my-section',       // Location in fileystem
-      title: 'My Section',              // Title
-      subtitle: 'Getting started guide',// Subtitle
-      href: '/my-section/intro',        // Entry point to docs (file)
+      root: '../docs/my-section', // Location in fileystem
+      title: 'My Section', // Title
+      subtitle: 'Getting started guide', // Subtitle
+      href: '/my-section/intro', // Entry point to docs (file)
     },
   ],
 })
@@ -106,18 +100,8 @@ docsIntegration({
 Run the dev server from `.starfu/`:
 
 <Tabs syncKey="pkg">
-  <TabItem label="pnpm (recommended)">
-    ```bash
-    cd .starfu
-    pnpm dev
-    ```
-  </TabItem>
-  <TabItem label="npm">
-    ```bash
-    cd .starfu
-    npm run dev
-    ```
-  </TabItem>
+  <TabItem label="pnpm (recommended)">```bash cd .starfu pnpm dev ```</TabItem>
+  <TabItem label="npm">```bash cd .starfu npm run dev ```</TabItem>
 </Tabs>
 
 Your docs are served **locally** at `http://localhost:4321/<repo-name>/`. Edit your docs, and see changes in real-time.

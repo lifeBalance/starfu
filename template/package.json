@@ -19,21 +19,34 @@
   },
   "typesVersions": {
     "*": {
-      "*": ["."],
-      "integration": ["src/lib/docs/integration"],
-      "config": ["src/lib/docs/config"],
-      "lib/docs": ["src/lib/docs/index"],
-      "index": ["src/lib/docs/index"],
-      "section": ["src/lib/docs/section"],
-      "tocParser": ["src/lib/docs/tocParser"],
-      "defaults": ["src/lib/docs/defaults"]
+      "*": [
+        "."
+      ],
+      "integration": [
+        "src/lib/docs/integration"
+      ],
+      "config": [
+        "src/lib/docs/config"
+      ],
+      "lib/docs": [
+        "src/lib/docs/index"
+      ],
+      "index": [
+        "src/lib/docs/index"
+      ],
+      "section": [
+        "src/lib/docs/section"
+      ],
+      "tocParser": [
+        "src/lib/docs/tocParser"
+      ],
+      "defaults": [
+        "src/lib/docs/defaults"
+      ]
     }
   },
   "dependencies": {
     "@astrojs/mdx": "^4.3.12",
-    "hast-util-select": "^6.0.4",
-    "rehype": "^13.0.2",
-    "unist-util-visit": "^5.0.0",
     "@expressive-code/plugin-collapsible-sections": "^0.41.3",
     "@iconify-icons/mdi": "^1.2.48",
     "@tailwindcss/typography": "^0.5.19",
@@ -42,12 +55,16 @@
     "astro-expressive-code": "^0.41.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "hast-util-select": "^6.0.4",
     "pagefind": "^1.5.0",
-    "tailwind-merge": "^3.4.0",
+    "rehype": "^13.0.2",
+    "remark-github-blockquote-alert": "^2.1.0",
     "sharp": "^0.33.5",
+    "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.17",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "unist-util-visit": "^5.0.0"
   },
   "devDependencies": {
     "@iconify-json/mdi": "^1.2.3",

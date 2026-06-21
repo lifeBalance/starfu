@@ -5,6 +5,7 @@ import mdx from '@astrojs/mdx'
 import expressiveCode from 'astro-expressive-code'
 import icons from 'astro-icon'
 import docsIntegration from './src/lib/docs/integration'
+import { remarkAlert } from 'remark-github-blockquote-alert'
 
 const alias = {
   '@styles': '/src/styles',
@@ -42,6 +43,9 @@ export default defineConfig({
   site: getSite(),
   base: getBase(),
   outDir: starfuConfig.outDir,
+  markdown: {
+    remarkPlugins: [remarkAlert],
+  },
   integrations: [
     expressiveCode(),
     mdx(),
